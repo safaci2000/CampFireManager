@@ -45,5 +45,3 @@ if ($response->status == Auth_OpenID_CANCEL) {
   if (@$sreg['fullname']) {$_SESSION['full']=htmlentities($sreg['fullname']);}
   header("Location: $baseurl");
 }
-
-?>

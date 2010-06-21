@@ -282,5 +282,3 @@ abstract class GetBaseAPI extends GenericBaseClass {
     return($return);
   }
 }
-
-?>
