@@ -25,12 +25,10 @@ $next=$now_and_next['next'];
 
 $contact_fields=array('mailto', 'twitter', 'linkedin', 'identica', 'statusnet', 'facebook', 'irc', 'http', 'https');
 
-$event_title = array_key_exists('event_title', $Camp_DB->config) ? $Camp_DB->config['event_title'] : 'CampfireDefaultEvent';
-
 ?>
 <html>
   <head>
-  <title><?php echo $event_title; ?></title>
+  <title><?php echo $Camp_DB->config['event_title']; ?></title>
   <link rel="stylesheet" type="text/css" href="common_style.php" />
   <script type="text/javascript" src="external/jquery-1.4.2.min.js"></script>
   <script type="text/javascript" src="external/jquery.marquee.js"></script>
@@ -50,11 +48,7 @@ $event_title = array_key_exists('event_title', $Camp_DB->config) ? $Camp_DB->con
   <body>
 <?php
 
-$command = '';
-if( array_key_exists('state', $_REQUEST)) {
-  $command = $_REQUEST['state'];
-}
-switch( $command ) {
+switch($_REQUEST['state']) {
   case 'logout':
     $err="You have successfully logged out. If you want to act further, please try again. <br />";
     foreach($_SESSION as $key=>$val) {unset($_SESSION[$key]);}
@@ -70,9 +64,7 @@ switch( $command ) {
 }
 
 if(!isset($_SESSION['openid'])) {
-  $event_details = array_key_exists('AboutTheEvent', $Camp_DB->config) ? $Camp_DB->config['AboutTheEvent'] : 'Event details go here.';
-  
-  echo "<h1>Login to CampFireManager for $event_title</h1>";
+  echo "<h1>Login to CampFireManager for {$Camp_DB->config['event_title']}</h1>";
   if(isset($err)) {echo '<div id="verify-form" class="error">'.$err.'</div>';}
   if(isset($_GET['reason'])) {echo '<div id="verify-form" class="error">Reason: ' . $_GET['reason'] . '</div>';}
   echo '<div id="verify-form"><table width="100%"><tr>
@@ -104,7 +96,7 @@ if(!isset($_SESSION['openid'])) {
     </table>
   </td>
   <td>Or enter your own below:<br /><form method="get" action="try_auth.php"><input type="hidden" name="action" value="verify" /><input type="text" name="openid_identifier" size="25" value="" /><input type="submit" value="Log in" /></form></td></tr></table></div>';
-  echo "<div class=\"EventDetails\">$event_details</div>";
+  echo "<div class=\"EventDetails\">{$Camp_DB->config['AboutTheEvent']}</div>";
 } else {
   $Camp_DB->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>$_SESSION['name'], 'OpenID_Mail'=>$_SESSION['email']));
   echo "<h1 class=\"headerbar\">{$Camp_DB->config['event_title']}</h1>\r\n";

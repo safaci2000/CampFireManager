@@ -24,19 +24,19 @@ class Camp_DB extends GenericBaseClass {
 
   protected $today;
 
-  public $arrTalks=array();
-  public $arrTalkSlots=array();
-  public $arrTimeEndPoints=array();
+  var $arrTalks=array();
+  var $arrTalkSlots=array();
+  var $arrTimeEndPoints=array();
 
-  public $contact_fields=array('mailto', 'twitter', 'linkedin', 'identica', 'statusnet', 'facebook', 'irc', 'http', 'https');
+  var $contact_fields=array('mailto', 'twitter', 'linkedin', 'identica', 'statusnet', 'facebook', 'irc', 'http', 'https');
 
-  public $times=array();
-  public $rooms=array();
-  public $config=array();
+  var $times=array();
+  var $rooms=array();
+  var $config=array();
 
   // Calculated Data
-  public $now_time;
-  public $next_time;
+  var $now_time;
+  var $next_time;
 
   function __construct($db_host, $db_user, $db_pass, $db_base, $db_prefix, $arrAuthDetails=array(), $debug=0) {
     parent::__construct($db_host, $db_user, $db_pass, $db_base, $db_prefix, $debug);
@@ -670,7 +670,6 @@ class Camp_DB extends GenericBaseClass {
 
   function readTalkData() {
     $this->doDebug("readTalkData();");
-    $arrTalkSlots = array();
     $arrTalks=$this->getTalks();
     $arrAttendanceByTalks=$this->getAttendeesCount();
     $arrPeopleAsPresentersOnly=$this->getPresenters();

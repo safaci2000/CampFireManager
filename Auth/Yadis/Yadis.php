@@ -250,7 +250,7 @@ class Auth_Yadis_Yadis {
      * If Auth_Yadis_CURL_OVERRIDE is defined, this method will always
      * return a {@link Auth_Yadis_PlainHTTPFetcher}.
      */
-    public static function getHTTPFetcher($timeout = 20)
+    function getHTTPFetcher($timeout = 20)
     {
         if (Auth_Yadis_Yadis::curlPresent() &&
             (!defined('Auth_Yadis_CURL_OVERRIDE'))) {
@@ -261,7 +261,7 @@ class Auth_Yadis_Yadis {
         return $fetcher;
     }
 
-    public static function curlPresent()
+    function curlPresent()
     {
         return function_exists('curl_init');
     }
@@ -269,7 +269,7 @@ class Auth_Yadis_Yadis {
     /**
      * @access private
      */
-    static function _getHeader($header_list, $names)
+    function _getHeader($header_list, $names)
     {
         foreach ($header_list as $name => $value) {
             foreach ($names as $n) {
@@ -285,7 +285,7 @@ class Auth_Yadis_Yadis {
     /**
      * @access private
      */
-    static function _getContentType($content_type_header)
+    function _getContentType($content_type_header)
     {
         if ($content_type_header) {
             $parts = explode(";", $content_type_header);
@@ -317,7 +317,7 @@ class Auth_Yadis_Yadis {
      * Auth_Yadis_Yadis, depending on whether the discovery
      * succeeded.
      */
-    public static function discover($uri, &$fetcher,
+    function discover($uri, &$fetcher,
                       $extra_ns_map = null, $timeout = 20)
     {
         $result = new Auth_Yadis_DiscoveryResult($uri);
@@ -378,3 +378,5 @@ class Auth_Yadis_Yadis {
         return $result;
     }
 }
+
+?>

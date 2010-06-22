@@ -917,3 +917,4 @@ class Auth_OpenID_Message {
     }
 }
 
+?>
