@@ -1,5 +1,4 @@
 <?php
-
 /**
  * This module documents the main interface with the OpenID consumer
  * library.  The only part of the library which has to be used and
@@ -157,6 +156,7 @@
  * @license http://www.apache.org/licenses/LICENSE-2.0 Apache
  */
 
+
 /**
  * Require utility classes and functions for the consumer.
  */
@@ -268,9 +268,9 @@ class Auth_OpenID_Consumer {
         $this->session =& $session;
 
         if ($consumer_cls !== null) {
-            $this->consumer =& new $consumer_cls($store);
+            $this->consumer = new $consumer_cls($store);
         } else {
-            $this->consumer =& new Auth_OpenID_GenericConsumer($store);
+            $this->consumer = new Auth_OpenID_GenericConsumer($store);
         }
 
         $this->_token_key = $this->session_key_prefix . $this->_token_suffix;
@@ -2231,4 +2231,3 @@ class Auth_OpenID_SetupNeededResponse extends Auth_OpenID_ConsumerResponse {
     }
 }
 
-?>
