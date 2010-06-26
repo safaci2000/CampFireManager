@@ -220,7 +220,7 @@ class Camp_DB extends GenericBaseClass {
       $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}talks SET boolFixed=1 WHERE intTalkID='$intTalkID'");
     } else {
       $this->doDebug("Talk $intTalkID is unfixed", 2);
-      $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}talks SET boolFixed= WHERE intTalkID='$intTalkID'");
+      $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}talks SET boolFixed=0 WHERE intTalkID='$intTalkID'");
     }
     $this->refresh();
   }
