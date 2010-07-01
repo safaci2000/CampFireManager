@@ -931,10 +931,18 @@ class Camp_DB extends GenericBaseClass {
     $this->generateNewAdminKey($resource);
   }
 
+  protected function _setSupport() {
+    $this->doDebug("_setSupport()");
+    $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}people SET boolIsSupport=1 WHERE intPersonID='{$this->intPersonID}'");
+    $this->generateNewSupportKey($resource);
+  }
+
   function mergeContactDetails($strAuthString) {
     $strAuthString=$this->escape($strAuthString);
     if($this->config['adminkey']==$strAuthString) {
       $this->_setAdmin();
+    } elseif($this->config['supportkey']==$strAuthString) {
+      $this->_setSupport();
     } else {
       $contacts=$this->getPerson(array('strAuthString'=>$strAuthString));
       if(count($contacts)==1) {$this->_mergeContactDetails($contacts);}
