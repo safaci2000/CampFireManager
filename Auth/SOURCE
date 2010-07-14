@@ -1,4 +1,10 @@
-On 2010-06-26 I pulled the current "head" (version 2.2.2) of the JanRain OpenID Library from 
-http://github.com/openid/php-openid (which was dated 2010-04-29).
+On 2010-06-26 I pulled the current "head" (version 2.2.2) of the JanRain OpenID
+Library from http://github.com/openid/php-openid (which was dated 2010-04-29).
+
+Due to an issue with "Bad Signature" messages with the php-openid library we're
+using, I also applied an old patch (against a ticket on the old JanRain Trac
+instance - http://trac.openidenabled.com/trac/ticket/356 which I've copied to
+the GitHub issue tracker http://github.com/openid/php-openid/issues/#issue/17,
+however, I have not patched the version on GitHub)
 
 I have copied the "common.php" file from examples/consumer/common.php to the Auth directory.
