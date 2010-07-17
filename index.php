@@ -97,6 +97,9 @@ if(!isset($_SESSION['openid'])) {
   </td>
   <td>Or enter your own below:<br /><form method="get" action="try_auth.php"><input type="hidden" name="action" value="verify" /><input type="text" name="openid_identifier" size="25" value="" /><input type="submit" value="Log in" /></form></td></tr></table></div>';
   echo "<div class=\"EventDetails\">{$Camp_DB->config['AboutTheEvent']}</div>";
+  if(!isset($_SESSION['redirect'])) {
+    echo '<div id="mainbody" class="mainbody"></div><script type="text/javascript">update();</script>';
+  }
 } else {
   $Camp_DB->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>$_SESSION['name'], 'OpenID_Mail'=>$_SESSION['email']));
   echo "<h1 class=\"headerbar\">{$Camp_DB->config['event_title']}</h1>\r\n";
