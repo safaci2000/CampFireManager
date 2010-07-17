@@ -85,7 +85,7 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
   }
   echo "<tr><td colspan=\"2\"><input type=\"submit\" value=\"Update Configuration\"></form>";
   echo "
-<tr><td><form method=\"post\" action=\"{$baseurl}admin.php\" class=\"WholeDay\">
+<tr><td><form method=\"post\" action=\"{$baseurl}admin.php#sms\" class=\"WholeDay\">
 <input type=\"hidden\" name=\"update_phones\" value=\"TRUE\">
 <table>
   <tr><th colspan=\"3\">SMS Devices (accessed by Gammu)</th></tr>
@@ -99,13 +99,13 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
   echo "
   <tr><th colspan=\"3\">New SMS Device</th></tr>
   <tr>
-    <td class=\"Data\"><input type=\"text\" name=\"phone_number_new\" size=\"15\" value=\"\"></td>
+    <td class=\"Data\"><a name=\"sms\"><input type=\"text\" name=\"phone_number_new\" size=\"15\" value=\"\"></td>
     <td class=\"Data\"><input type=\"text\" name=\"phone_network_new\" size=\"15\" value=\"\"></td>
     <td class=\"Data\"><input type=\"text\" name=\"phone_gammu_new\" size=\"15\" value=\"\"></td>
   </tr>";
   echo "<tr><td colspan=\"3\"><input type=\"submit\" value=\"Update Phones\">";
   echo "</table></form></td>
-<td><form method=\"post\" action=\"{$baseurl}admin.php\" class=\"WholeDay\">
+<td><form method=\"post\" action=\"{$baseurl}admin.php#mb\" class=\"WholeDay\">
 <input type=\"hidden\" name=\"update_microblogs\" value=\"TRUE\">
 <table>
   <tr><th colspan=\"3\">Microbloggging Accounts (via Twitter APIs)</th></tr>
@@ -119,13 +119,13 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
   echo "
   <tr><th colspan=\"4\">New Microblog</th></tr>
   <tr>
-    <td class=\"Data\"><input type=\"text\" name=\"mb_api_new\" size=\"15\" value=\"\"></td>
+    <td class=\"Data\"><a name=\"mb\"><input type=\"text\" name=\"mb_api_new\" size=\"15\" value=\"\"></td>
     <td class=\"Data\"><input type=\"text\" name=\"mb_user_new\" size=\"15\" value=\"\"></td>
     <td class=\"Data\"><input type=\"password\" name=\"mb_pass_new\" size=\"15\" value=\"\"></td>
   </tr>";
   echo "<tr><td colspan=\"4\"><input type=\"submit\" value=\"Update Microblogs\">";
   echo "</table></form></td>
-<tr><td><form method=\"post\" action=\"{$baseurl}admin.php\" class=\"WholeDay\">
+<tr><td><form method=\"post\" action=\"{$baseurl}admin.php#time\" class=\"WholeDay\">
 <input type=\"hidden\" name=\"update_times\" value=\"TRUE\">
 <table>
   <tr><th colspan=\"2\">Time Options (please sort these manually by time)</th></tr>
@@ -138,11 +138,11 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
   echo "
   <tr>
     <td class=\"Label\">New Time Slot</td>
-    <td class=\"Data\"><input type=\"text\" name=\"time_new\" size=\"10\" value=\"\"></td>
+    <td class=\"Data\"><a name=\"time\"><input type=\"text\" name=\"time_new\" size=\"10\" value=\"\"></td>
   </tr>";
   echo "<tr><td colspan=\"2\"><input type=\"submit\" value=\"Update Times\">";
   echo "</table></form></td>
-<td><form method=\"post\" action=\"{$baseurl}admin.php\" class=\"WholeDay\">
+<td><form method=\"post\" action=\"{$baseurl}admin.php#room\" class=\"WholeDay\">
 <input type=\"hidden\" name=\"update_rooms\" value=\"TRUE\">
 <table>
   <tr><th colspan=\"3\">Room Options (please sort these manually by capacity)</th></tr>
@@ -156,7 +156,7 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
   echo "
   <tr>
     <td class=\"Label\">New Room</td>
-    <td class=\"Data\"><input type=\"text\" name=\"room_new\" size=\"25\" value=\"\"></td>
+    <td class=\"Data\"><a name=\"room\"><input type=\"text\" name=\"room_new\" size=\"25\" value=\"\"></td>
     <td class=\"Data\"><input type=\"text\" name=\"capacity_new\" size=\"4\" value=\"\"></td>
   </tr>";
   echo "<tr><td colspan=\"3\"><input type=\"submit\" value=\"Update Configuration\">";
