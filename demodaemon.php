@@ -69,7 +69,10 @@ while($run) {
     for($me=0; $me<=$rand; $me++) {
       $intPersonID=rand(1000,1199);
       $strPersonPhone="+44777777" . $intPersonID;
-      PhoneQueueInsert("A " . $arrFillSlots[rand(0, count($arrFillSlots)-1)], $strPersonPhone);
+      $r_attend=rand(0, count($arrFillSlots)-1);
+      if(isset($arrFillSlots[$r_attend])) {
+        PhoneQueueInsert("A " . $arrFillSlots[$r_attend], $strPersonPhone);
+      }
     }
   }
   if($counter>100) {$run=FALSE;}
@@ -79,9 +82,8 @@ while($run) {
 }
 
 function CreateTalk($number, $FreeSlots) {
-  $msg='P 1 ';
-//  $slot=rand(0, count($FreeSlots)-1);
-  $msg.=$FreeSlots[$slot] . ' ';
+  $msg='P ';
+  $msg.=$FreeSlots[rand(1, count($FreeSlots)-1)] . ' ';
   $length_chance=rand(0,10);
   if($length_chance>9) {$msg.='2 ';} else {$msg.='1 ';}
   $msg.=MakeRandomString();
