@@ -14,19 +14,29 @@
 
 $baseurl=calculateBaseURL();
 function calculateBaseURL() {
-  if($_SERVER['https'] == 1) {
+  if(isset($_SERVER['HTTPS']) and $_SERVER['HTTPS'] == 1) {
     $scheme="https";
-    if($_SERVER['SERVER_PORT']!=443) {$port=":" . $_SERVER['SERVER_PORT'];}
-  } elseif ($_SERVER['https'] == 'on') {
+    if(isset($_SERVER['SERVER_PORT']) and $_SERVER['SERVER_PORT']!=443) {
+      $port=":" . $_SERVER['SERVER_PORT'];
+    }
+  } elseif (isset($_SERVER['HTTPS']) and $_SERVER['HTTPS'] == 'on') {
     $scheme="https";
-    if($_SERVER['SERVER_PORT']!=443) {$port=":" . $_SERVER['SERVER_PORT'];}
-  } elseif ($_SERVER['SERVER_PORT']==443) {
+    if(isset($_SERVER['SERVER_PORT']) and $_SERVER['SERVER_PORT']!=443) {
+      $port=":" . $_SERVER['SERVER_PORT'];
+    }
+  } elseif (isset($_SERVER['SERVER_PORT']) and $_SERVER['SERVER_PORT']==443) {
     $scheme="https";
   } else {
     $scheme="http";
-    if($_SERVER['SERVER_PORT']!=80) {$port=":" . $_SERVER['SERVER_PORT'];}
+    if(isset($_SERVER['SERVER_PORT']) and $_SERVER['SERVER_PORT']!=80) {
+      $port=":" . $_SERVER['SERVER_PORT'];
+    }
   }
-  return("$scheme://{$_SERVER['SERVER_NAME']}$port" . dirname($_SERVER['SCRIPT_NAME']) . "/");
+  if(isset($_SERVER['SERVER_NAME'])) {
+    return("$scheme://{$_SERVER['SERVER_NAME']}$port" . dirname($_SERVER['SCRIPT_NAME']) . "/");
+  } else {
+    return("");
+  }
 }
 
 function genRandStr($minLen, $maxLen, $alphaLower = 1, $alphaUpper = 1, $num = 1, $batch = 1) {

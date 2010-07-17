@@ -106,6 +106,8 @@ class Camp_DB extends GenericBaseClass {
 
     // Check for a Phone Account
     if(isset($me['number'])) {
+      if(!isset($me['phone'])) {$me['phone']='';}
+      if(!isset($me['text'])) {$me['text']='';}
       $me['number']=$this->escape($me['number']);
       $me['phone']=$this->escape($me['phone']);
       $me['phone_nick']="Someone with a mobile number ending " . substr($me['number'], -4);

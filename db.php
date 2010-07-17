@@ -29,7 +29,13 @@ $db_Phone=array(
 );
 
 //Load class files
-if(!isset($base_dir)) {if(file_exists("libraries/GenericBaseClass.php")) {$base_dir='libraries/';} else {$base_dir='';}}
+if(!isset($base_dir)) {
+  if(file_exists("libraries/GenericBaseClass.php")) {
+    $base_dir='libraries/';
+  } else {
+    $base_dir='';
+  }
+}
 require_once("{$base_dir}Camp_DB_Test.php");
 require_once("{$base_dir}SmsSource.php");
 require_once("{$base_dir}OmbSource.php");
