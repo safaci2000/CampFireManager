@@ -36,7 +36,7 @@ if(is_array($MBlog_Accounts) and count($MBlog_Accounts)>0) {
 }
 
 while(true) {
-  sleep(5);
+  sleep(2);
   if($Camp_DB->fixRooms()) {
     // fixRooms returns true if it fixed a room, thus, let's broadcast that.
     if(isset($Camp_DB->config['FixRoomOffset'])) {$offset=$Camp_DB->config['FixRoomOffset'];} else {$offset="-15 minutes";}

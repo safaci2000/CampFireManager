@@ -7,7 +7,7 @@ set_time_limit(0);
 $__campfire=array();
 $__phone=TRUE;
 
-$debug=1;
+$debug=0;
 $counter=0;
 require_once("db.php");
 $Phone_DB=new SmsSource($db_Phone['host'], $db_Phone['user'], $db_Phone['pass'], $db_Phone['base'], '', $debug);
@@ -47,9 +47,6 @@ while($run) {
     $state=FALSE;
     if($compare>$rate) {
       $state=TRUE;
-      echo "Comparing $rate with $compare (TRUE)\r\n";
-    } else {
-      echo "Comparing $rate with $compare (FALSE)\r\n";
     }
     if($state==TRUE) {
       $rand=rand(1,2);
@@ -77,7 +74,7 @@ while($run) {
   }
   if($counter>100) {$run=FALSE;}
   $counter++;
-  sleep(rand(3,10));
+  sleep(rand(1,5));
   $Camp_DB->refresh();
 }
 
@@ -91,7 +88,7 @@ function CreateTalk($number, $FreeSlots) {
 }
 
 function MakeRandomString() {
-  $len=rand(10, 150);
+  $len=rand(10, 75);
   $msg='';
   for($pos=0; $pos<$len; $pos++) {
     $strings=str_split("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!?.,              ");
@@ -101,6 +98,7 @@ function MakeRandomString() {
 }
 
 function PhoneQueueInsert($msg, $number) {
+  echo "SMS from $number: $msg\r\n";
   global $Camp_DB, $Phone_DB;
   $arrMessageChunks=str_split($Camp_DB->escape(stripslashes($msg)), 160);
   if(count($arrMessageChunks)>1) {

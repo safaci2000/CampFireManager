@@ -62,7 +62,7 @@ function genRandStr($minLen, $maxLen, $alphaLower = 1, $alphaUpper = 1, $num = 1
       $strLen = rand($minLen, $maxLen);
     }
     $merged = array_merge($alphaLowerArray, $alphaUpperArray, $numArray);
-    
+
     if ($alphaLower == 1 && $alphaUpper == 1 && $num == 1) {
       $finalArray = array_merge($alphaLowerArray, $alphaUpperArray, $numArray);
     } elseif ($alphaLower == 1 && $alphaUpper == 1 && $num == 0) {
@@ -74,20 +74,20 @@ function genRandStr($minLen, $maxLen, $alphaLower = 1, $alphaUpper = 1, $num = 1
     } elseif ($alphaLower == 1 && $alphaUpper == 0 && $num == 0) {
       $finalArray = $alphaLowerArray;
     } elseif ($alphaLower == 0 && $alphaUpper == 1 && $num == 0) {
-      $finalArray = $alphaUpperArray;                       
+      $finalArray = $alphaUpperArray;
     } elseif ($alphaLower == 0 && $alphaUpper == 0 && $num == 1) {
       $finalArray = $numArray;
     } else {
       return FALSE;
     }
-    
+
     $count = count($finalArray);
-    
+
     if ($batch == 1) {
       $str = '';
       $i = 1;
       while ($i <= $strLen) {
-        $rand = rand(0, $count);
+        $rand = rand(0, $count-1);
         $newChar = $finalArray[$rand];
         $str .= $newChar;
         $i++;
