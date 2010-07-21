@@ -11,7 +11,7 @@
  * http://code.google.com/p/campfiremanager/
  ******************************************************/
 
-session_start();
+if(session_id()==='') {session_start();}
 if(isset($_SESSION['redirect'])) {unset($_SESSION['redirect']);}
 require_once("db.php");
 if(!isset($Camp_DB->config['adminkey'])) {$Camp_DB->generateNewAdminKey();}
@@ -21,7 +21,7 @@ if(!isset($_SESSION['openid'])) {
   $_SESSION['redirect']='admin.php';
   header("Location: $baseurl");
 } else {
-  $Camp_DB->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>$_SESSION['name'], 'OpenID_Mail'=>$_SESSION['email']));
+  $Camp_DB->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>CampUtils::arrayGet($_SESSION, 'name', ''), 'OpenID_Mail'=>CampUtils::arrayGet($_SESSION, 'email', '')));
 }
 if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by default!!
   header("Location: $baseurl?state=Oa&AuthString={$Camp_DB->config['adminkey']}");

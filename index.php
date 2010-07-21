@@ -11,7 +11,7 @@
  * http://code.google.com/p/campfiremanager/
  ******************************************************/
 
-session_start(); 
+if(session_id()==='') {session_start();}
 if(isset($_SESSION['openid']) and isset($_SESSION['redirect'])) {header("Location: " . $_SESSION['redirect']);}
 if(file_exists("libraries/GenericBaseClass.php")) {$base_dir='libraries/';} else {$base_dir='';}
 require_once("db.php");
@@ -48,7 +48,7 @@ $contact_fields=array('mailto', 'twitter', 'linkedin', 'identica', 'statusnet', 
   <body>
 <?php
 
-switch($_REQUEST['state']) {
+switch(CampUtils::arrayGet($_REQUEST,'state','')) {
   case 'logout':
     $err="You have successfully logged out. If you want to act further, please try again. <br />";
     foreach($_SESSION as $key=>$val) {unset($_SESSION[$key]);}
@@ -64,7 +64,7 @@ switch($_REQUEST['state']) {
 }
 
 if(!isset($_SESSION['openid'])) {
-  echo "<h1>Login to CampFireManager for {$Camp_DB->config['event_title']}</h1>";
+  echo "<h1>Login to CampFireManager for " . CampUtils::arrayGet($Camp_DB->config, 'event_title', 'an undefined event') . "</h1>";
   if(isset($err)) {echo '<div id="verify-form" class="error">'.$err.'</div>';}
   if(isset($_GET['reason'])) {echo '<div id="verify-form" class="error">Reason: ' . $_GET['reason'] . '</div>';}
   echo '<div id="verify-form"><table width="100%"><tr>
@@ -95,15 +95,25 @@ if(!isset($_SESSION['openid'])) {
       </tr>
     </table>
   </td>
-  <td>Or enter your own below:<br /><form method="get" action="try_auth.php"><input type="hidden" name="action" value="verify" /><input type="text" name="openid_identifier" size="25" value="" /><input type="submit" value="Log in" /></form></td></tr></table></div>';
-  echo "<div class=\"EventDetails\">{$Camp_DB->config['AboutTheEvent']}</div>";
+  <td>Or enter your own below:
+    <br />
+    <form method="get" action="try_auth.php">
+      <input type="hidden" name="action" value="verify" />
+      <input type="text" name="openid_identifier" size="25" value="" />
+      <input type="submit" value="Log in" />
+    </form>
+  </td>
+</tr>
+</table>
+</div>';
+  echo "<div class=\"EventDetails\">" . CampUtils::arrayGet($Camp_DB->config, 'AboutTheEvent', '') . "</div>";
   if(!isset($_SESSION['redirect'])) {
     echo '<div id="mainbody" class="mainbody"></div><script type="text/javascript">update();</script>';
   }
 } else {
-  $Camp_DB->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>$_SESSION['name'], 'OpenID_Mail'=>$_SESSION['email']));
-  echo "<h1 class=\"headerbar\">{$Camp_DB->config['event_title']}</h1>\r\n";
-  switch($_REQUEST['state']) {
+  $Camp_DB->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>CampUtils::arrayGet($_SESSION, 'name', ''), 'OpenID_Mail'=>CampUtils::arrayGet($_SESSION, 'email', '')));
+  echo "<h1 class=\"headerbar\">" . CampUtils::arrayGet($Camp_DB->config, 'event_title', 'A CampFireManager Event') . "</h1>\r\n";
+  switch(CampUtils::arrayGet($_REQUEST, 'state', '')) {
     case "O":
       $arrAuthString=$Camp_DB->getAuthStrings();
       $phones=$Camp_DB->getPhones();
@@ -125,7 +135,7 @@ if(!isset($_SESSION['openid'])) {
       if(count($phones)>0 and count($omb)>0) {echo " or ";}
       if(count($omb)==1) {echo "$omb_accounts by direct message";}
       if(count($omb)>1) {echo "your preferred microblogging account (from $omb_accounts by) direct message";}
-      echo ":\r\n" . $Camp_DB->getAuthCode() . "<br />\r\nAlternatively, please enter your Auth String into this box:<input type=\"text\" size=\"50\" name=\"AuthString\" />\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
+      echo ":\r\nO " . $Camp_DB->getAuthCode() . "<br />\r\nAlternatively, please enter another Auth String into this box:<input type=\"text\" size=\"50\" name=\"AuthString\" />\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
       break;
     case "Oa":
       echo "<p class=\"RespondToAction\">Adding an Authorization String to your account</p>\r\n";
@@ -135,9 +145,9 @@ if(!isset($_SESSION['openid'])) {
       $details=$Camp_DB->getContactDetails(0, TRUE);
       echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n" . 
                 "<input type=\"hidden\" name=\"state\" value=\"Id\">\r\nYour name:\r\n" . 
-                "<div class=\"data_Name\"><span class=\"Label\">Name:</span> <span=\"Data\"><input type=\"text\" name=\"name\" value=\"{$details['strName']}\" /></span></div>";
+                "<div class=\"data_Name\"><span class=\"Label\">Name:</span> <span=\"Data\"><input type=\"text\" name=\"name\" value=\"" . CampUtils::arrayGet($details, 'strName', '') . "\" /></span></div>";
       foreach($contact_fields as $proto) {
-        echo "\r\n<div class=\"data_$proto\"><span class=\"Label\">$proto:</span> <span=\"Data\"><input type=\"text\" name=\"$proto\" value=\"{$details[$proto]}\" /></span></div>";
+        echo "\r\n<div class=\"data_$proto\"><span class=\"Label\">$proto:</span> <span=\"Data\"><input type=\"text\" name=\"$proto\" value=\"" . CampUtils::arrayGet($details, $proto, '') . "\" /></span></div>";
       }
       echo "\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
       break;

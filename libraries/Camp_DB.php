@@ -548,6 +548,7 @@ class Camp_DB extends GenericBaseClass {
   }
 
   function showStatusScreen($number=50) {
+    $where='';
     if($this->intPersonID!='') {$where="intPersonID='{$this->intPersonID}' AND ";} 
     return($this->qryMap('intUpdateID', 'strMessage', "{$this->prefix}sms_screen WHERE $where datInsert>'" . date("Y-m-d H:i:s", strtotime("-15 minutes")) . "' ORDER BY datInsert DESC", '',  "LIMIT 0, $number"));
   }
@@ -1021,7 +1022,7 @@ class Camp_DB extends GenericBaseClass {
 
     $this->doDebug("getTimetableTemplate($includeCountData, $includeProposeLink);");
 
-    session_start();
+    if(session_id()==='') {session_start();}
     if(isset($_SESSION['openid'])) {$this->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>$_SESSION['name'], 'OpenID_Mail'=>$_SESSION['email']));}
 
     // Get the talks this person is presenting

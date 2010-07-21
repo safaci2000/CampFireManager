@@ -14,6 +14,8 @@
 
 $baseurl=calculateBaseURL();
 function calculateBaseURL() {
+  $scheme='';
+  $port='';
   if(isset($_SERVER['HTTPS']) and $_SERVER['HTTPS'] == 1) {
     $scheme="https";
     if(isset($_SERVER['SERVER_PORT']) and $_SERVER['SERVER_PORT']!=443) {
