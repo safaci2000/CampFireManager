@@ -8,7 +8,7 @@ session_start();
 function getOpenIDURL() {
     // Render a default page if we got a submission without an openid
     // value.
-    if (empty($_GET['openid_identifier'])) {
+    if (!array_key_exists('openid_identifier', $_GET) || empty($_GET['openid_identifier'])) {
         $err = "Expected an OpenID URL.";
         include 'index.php';
         exit(0);
