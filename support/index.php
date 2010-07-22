@@ -34,7 +34,8 @@ if($Camp_DB->getSupport()==0 AND $Camp_DB->getAdmins()==0) {
   header("Location: ../?state=Oa&AuthString={$Camp_DB->config['supportkey']}");
 } elseif($Camp_DB->checkAdmin()==1 OR $Camp_DB->checkSupport()==1) {
   $Camp_DB->setDebug(2);
-  echo "<html><head><title>{$Camp_DB->config['event_title']}</title><link rel=\"stylesheet\" type=\"text/css\" href=\"../common_style.php\" /></head><body>";
+  $event_title = CampUtils::arrayGet($Camp_DB->config, 'event_title', 'CampfireDefaultEvent');
+  echo "<html><head><title>$event_title</title><link rel=\"stylesheet\" type=\"text/css\" href=\"../common_style.php\" /></head><body>";
   echo "<table width=\"100%\"><tr><td><a href=\"..\" class=\"Label\">Back to main screen</a></td>";
   if(isset($_GET['logout'])) {unset($_SESSION['support_user']);}
   $arrMbs=$Camp_DB->getMicroBloggingAccounts();
@@ -58,6 +59,7 @@ if($Camp_DB->getSupport()==0 AND $Camp_DB->getAdmins()==0) {
   } elseif(isset($_POST['name']) AND $_POST['name']!='') {
     $status=$Camp_DB->getPerson(array('strName'=>'%' . $_POST['name'] . '%'));
   }
+  $auth_code = '';
   if(isset($_SESSION['support_user'])) {
     $person=$Camp_DB->allMyDetails();
     echo "<td class=\"right\"><a href=\"{$baseurl}?logout\" class=\"Label\">Stop supporting this attendee</a></td>";
@@ -106,7 +108,8 @@ if($Camp_DB->getSupport()==0 AND $Camp_DB->getAdmins()==0) {
       $details=$Camp_DB->getContactDetails(0, TRUE);
       echo "\r\n<form method=\"post\" action=\"$baseurl?contact\">\r\nYour name:\r\n<div class=\"data_Name\"><span class=\"Label\">Name:</span> <span=\"Data\"><input type=\"text\" name=\"name\" value=\"{$person['strName']}\" /></span></div>";
       foreach($contact_fields as $proto) {
-        echo "\r\n<div class=\"data_$proto\"><span class=\"Label\">$proto:</span> <span=\"Data\"><input type=\"text\" name=\"$proto\" value=\"{$details[$proto]}\" /></span></div>";
+        $valueString = CampUtils::arrayGet($details, $proto, '');
+        echo "\r\n<div class=\"data_$proto\"><span class=\"Label\">$proto:</span> <span=\"Data\"><input type=\"text\" name=\"$proto\" value=\"$valueString\" /></span></div>";
       }
       echo "\r\n<input type=\"submit\" name=\"update\" value=\"Go\"/></form>";
     } elseif(isset($_REQUEST['propose'])) {
