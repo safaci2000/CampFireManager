@@ -11,10 +11,11 @@
  * http://code.google.com/p/campfiremanager/
  ******************************************************/
 
-session_start();
+if(session_id()==='') {session_start();}
 if(isset($_SESSION['redirect'])) {unset($_SESSION['redirect']);}
 $base_dir="../libraries/";
 require_once("../db.php");
+require_once("{$base_dir}CampUtils.php");
 // Find the "Now" and "Next" time blocks
 $now_and_next=$Camp_DB->getNowAndNextTime();
 $now=$now_and_next['now'];
@@ -27,7 +28,7 @@ if(!isset($_SESSION['openid'])) {
   $_SESSION['redirect']='support';
   header("Location: ..");
 } else {
-  $Camp_DB->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>$_SESSION['name'], 'OpenID_Mail'=>$_SESSION['email']));
+  $Camp_DB->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>CampUtils::arrayGet($_SESSION, 'name', ''), 'OpenID_Mail'=>CampUtils::arrayGet($_SESSION, 'email', '')));
 }
 if($Camp_DB->getSupport()==0 AND $Camp_DB->getAdmins()==0) {
   header("Location: ../?state=Oa&AuthString={$Camp_DB->config['supportkey']}");

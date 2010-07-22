@@ -12,6 +12,7 @@
  ******************************************************/
 
 require_once($base_dir . "GenericBaseClass.php");
+require_once($base_dir . "CampUtils.php");
 
 class Camp_DB extends GenericBaseClass {
   // Cached data
@@ -1023,7 +1024,7 @@ class Camp_DB extends GenericBaseClass {
     $this->doDebug("getTimetableTemplate($includeCountData, $includeProposeLink);");
 
     if(session_id()==='') {session_start();}
-    if(isset($_SESSION['openid'])) {$this->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>$_SESSION['name'], 'OpenID_Mail'=>$_SESSION['email']));}
+    if(isset($_SESSION['openid'])) {$this->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>CampUtils::arrayGet($_SESSION, 'name', ''), 'OpenID_Mail'=>CampUtils::arrayGet($_SESSION, 'email', '')));}
 
     // Get the talks this person is presenting
     $my_talks=$this->getMyTalks();
