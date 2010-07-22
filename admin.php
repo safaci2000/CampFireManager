@@ -21,7 +21,12 @@ if(!isset($_SESSION['openid'])) {
   $_SESSION['redirect']='admin.php';
   header("Location: $baseurl");
 } else {
-  $Camp_DB->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>CampUtils::arrayGet($_SESSION, 'name', ''), 'OpenID_Mail'=>CampUtils::arrayGet($_SESSION, 'email', '')));
+  $dataSet = array(
+    'OpenID'=>$_SESSION['openid'],
+    'OpenID_Name'=>CampUtils::arrayGet($_SESSION, 'name', ''),
+    'OpenID_Mail'=>CampUtils::arrayGet($_SESSION, 'email', '')
+  );
+  $Camp_DB->getMe($dataSet);
 }
 if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by default!!
   header("Location: $baseurl?state=Oa&AuthString={$Camp_DB->config['adminkey']}");
@@ -35,14 +40,22 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
                         'AboutTheEvent'=>'Please provide some details about the content of your event.',
                         'hashtag'=>"Optional: What do you want people (including this script) to use as the hashtag for today?, including the # sign itself.");
 
-  if(isset($_POST['update_config'])) {foreach($config_fields as $value=>$description) {$Camp_DB->setConfig($value, stripslashes($_POST[$value]));}}
+  if(isset($_POST['update_config'])) {
+    foreach($config_fields as $field=>$description) {
+      $Camp_DB->setConfig($field, stripslashes(CampUtils::arrayGet($_POST, $field, '')));
+    }
+  }
   if(isset($_POST['update_times'])) {
     foreach($Camp_DB->times as $value=>$description) {$Camp_DB->updateTime($value, $_POST['time_' . $value]);}
     if($_POST['time_new']!='') {$Camp_DB->updateTime('', $_POST['time_new']);}
   }
   if(isset($_POST['update_rooms'])) {
-    foreach($Camp_DB->rooms as $value=>$description) {$Camp_DB->updateRoom($value, $_POST['room_' . $value], $_POST['capacity_' . $value]);}
-    if($_POST['room_new']!='' AND $_POST['capacity_new']!='') {$Camp_DB->updateRoom('', $_POST['room_new'], $_POST['capacity_new']);}
+    foreach($Camp_DB->rooms as $value=>$description) {
+      $Camp_DB->updateRoom($value, $_POST['room_' . $value], $_POST['capacity_' . $value]);
+    }
+    if($_POST['room_new']!='' AND $_POST['capacity_new']!='') {
+      $Camp_DB->updateRoom('', $_POST['room_new'], $_POST['capacity_new']);
+    }
   }
   if(!isset($Camp_DB->config['adminkey'])) {$Camp_DB->generateNewAdminKey();}
   if(isset($_POST['update_phones'])) {
@@ -58,9 +71,10 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
   $arrPhones=$Camp_DB->getPhones();
   $arrMbs=$Camp_DB->getMicroBloggingAccounts();
   $Camp_DB->refresh();
+  $event_title =CampUtils::arrayGet($Camp_DB->config, 'event_title', 'CampfireDefaultEvent');
   echo "<html>
 <head>
-<title>{$Camp_DB->config['event_title']}</title>
+<title>$event_title</title>
 <link rel=\"stylesheet\" type=\"text/css\" href=\"common_style.php\" />
 </head>
 <body>
@@ -73,7 +87,8 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
   <tr><td class=\"Label\">Next Support Key (note: each use will change this value)</td><td class=\"Data\">{$Camp_DB->config['supportkey']}</td></tr>
   <tr><td class=\"Label\">Lunch Time</td><td class=\"Data\"><select name=\"lunch\">";
   foreach($Camp_DB->times as $time=>$description) {
-    if($Camp_DB->config['lunch']==$time) {
+    $lunch = CampUtils::arrayGet($Camp_DB->config, 'lunch', '');
+    if($lunch == $time) {
       echo "<option value=\"$time\" selected=\"selected\">$description</option>";
     } else {
       echo "<option value=\"$time\">$description</option>";
@@ -81,7 +96,10 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
   }
   echo "</select></td></tr>";
   foreach($config_fields as $value=>$description) {
-    if($value!='lunch') {echo "  <tr><td class=\"Label\">$description</td><td class=\"Data\"><input type=\"text\" name=\"$value\" size=\"25\" value=\"" . $Camp_DB->config[$value] . "\"></td></tr>";}
+    $valueStr = CampUtils::arrayGet($Camp_DB->config, $value, '');
+    if ($value!='lunch') {
+      echo "  <tr><td class=\"Label\">$description</td><td class=\"Data\"><input type=\"text\" name=\"$value\" size=\"25\" value=\"" . $valueStr . "\"></td></tr>";
+    }
   }
   echo "<tr><td colspan=\"2\"><input type=\"submit\" value=\"Update Configuration\"></form>";
   echo "
