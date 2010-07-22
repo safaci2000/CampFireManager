@@ -81,7 +81,7 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
 <form method=\"post\" action=\"{$baseurl}admin.php\" class=\"WholeDay\">
 <input type=\"hidden\" name=\"update_config\" value=\"TRUE\">
 <table>
-  <tr><td><a href=\"$baseurl\" class=\"Label\">Back to main screen</a></td><td class=\"right\"><a href=\"{$baseurl}joind_in.php\" class=\"Label\">Joind.in XML file</a></td></tr>
+  <tr><td><a href=\"$baseurl\" class=\"Label\">Back to main screen</a></td></tr>
   <tr><th colspan=\"2\">Admin Console for Config Options (empty boxes will unset those values in the database)</th></tr>
   <tr><td class=\"Label\">Next Admin Key (note: each use will change this value)</td><td class=\"Data\">{$Camp_DB->config['adminkey']}</td></tr>
   <tr><td class=\"Label\">Next Support Key (note: each use will change this value)</td><td class=\"Data\">{$Camp_DB->config['supportkey']}</td></tr>
