@@ -3,7 +3,7 @@
 // This script derived from the libraries at http://openidenabled.com/php-openid/
 
 require_once "Auth/common.php";
-session_start();
+if(session_id()==='') {session_start();}
 
 function getOpenIDURL() {
     // Render a default page if we got a submission without an openid
