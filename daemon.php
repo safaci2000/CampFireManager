@@ -123,7 +123,7 @@ while(true) {
       // A [TalkID]  // R [TalkID]
       case "A ": // I will Attend a talk
       case "R ": // Remove me from a talk
-        for($i=0; $i<=count($commands); $i=$i+2) {
+        for($i=0; $i<=count($commands)-1; $i++) {
           switch(strtoupper($commands[$i])) {
             case "A":
               $Camp_DB->attendTalk($commands[$i+1]);
