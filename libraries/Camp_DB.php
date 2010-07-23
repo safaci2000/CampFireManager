@@ -298,11 +298,10 @@ class Camp_DB extends GenericBaseClass {
     if(!isset($this->rooms[$intRoomID]) AND $strRoom!='' AND $intCapacity!='') {
       $this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}rooms (strRoom, intCapacity) VALUES ('$strRoom', '$intCapacity')");
     }
-    
-    if($this->rooms[$intRoomID]['strRoom']!=$strRoom AND $strRoom!='' AND $this->rooms[$intRoomID]['intRoom']!=$intCapacity AND $intCapacity!='') {
+    if($this->rooms[$intRoomID]['strRoom']!=$strRoom AND $strRoom!='' AND $this->rooms[$intRoomID]['intRoomID']!=$intCapacity AND $intCapacity!='') {
       $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}rooms SET strRoom='$strRoom', intCapacity='$intCapacity' WHERE intRoomID='$intRoomID'");
     }
-    if(($this->rooms[$intRoomID]['strRoom']!=$strRoom AND $strRoom=='') OR ($this->rooms[$intRoomID]['intRoom']!=$intCapacity AND $intCapacity=='')) {
+    if(($this->rooms[$intRoomID]['strRoom']!=$strRoom AND $strRoom=='') OR ($this->rooms[$intRoomID]['intRoomID']!=$intCapacity AND $intCapacity=='')) {
       $this->boolUpdateOrInsertSql("TRUNCATE {$this->prefix}rooms");
       foreach($this->rooms as $old_intRoomID=>$arrRoom) {
         if($old_intRoomID!=$intRoomID) {$this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}rooms (strRoom, intCapacity) VALUES ('" . $arrRoom['strRoom'] . "', '" . $arrRoom['intCapacity'] . "')");}
