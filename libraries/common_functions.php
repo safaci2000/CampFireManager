@@ -35,7 +35,8 @@ function calculateBaseURL() {
     }
   }
   if(isset($_SERVER['SERVER_NAME'])) {
-    return("$scheme://{$_SERVER['SERVER_NAME']}$port" . dirname($_SERVER['SCRIPT_NAME']) . "/");
+    if(substr(dirname($_SERVER['SCRIPT_NAME']), -1)!='/') {$append='/';} else {$append='';}
+    return("$scheme://{$_SERVER['SERVER_NAME']}$port" . dirname($_SERVER['SCRIPT_NAME']) . $append);
   } else {
     return("");
   }

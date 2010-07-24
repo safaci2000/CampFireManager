@@ -1,8 +1,5 @@
 <?php
-
-$path_extra = dirname(dirname(dirname(__FILE__)));
-$path = ini_get('include_path');
-$path = $path_extra . PATH_SEPARATOR . $path;
+$path = dirname(dirname(dirname(__FILE__))) . PATH_SEPARATOR . ini_get('include_path');
 ini_set('include_path', $path);
 
 function displayError($message) {
@@ -11,30 +8,27 @@ function displayError($message) {
     exit(0);
 }
 
-function doIncludes() {
-    /**
-     * Require the OpenID consumer code.
-     */
-    require_once "Auth/OpenID/Consumer.php";
+  /**
+   * Require the OpenID consumer code.
+   */
+  require_once "Auth/OpenID/Consumer.php";
 
-    /**
-     * Require the "file store" module, which we'll need to store
-     * OpenID information.
-     */
-    require_once "Auth/OpenID/FileStore.php";
+  /**
+   * Require the "file store" module, which we'll need to store
+   * OpenID information.
+   */
+  require_once "Auth/OpenID/FileStore.php";
 
-    /**
-     * Require the Simple Registration extension API.
-     */
-    require_once "Auth/OpenID/SReg.php";
+  /**
+   * Require the Simple Registration extension API.
+   */
+  require_once "Auth/OpenID/SReg.php";
 
-    /**
-     * Require the PAPE extension module.
-     */
-    require_once "Auth/OpenID/PAPE.php";
-}
+  /**
+   * Require the PAPE extension module.
+   */
+  require_once "Auth/OpenID/PAPE.php";
 
-doIncludes();
 
 global $pape_policy_uris;
 $pape_policy_uris = array(
@@ -43,7 +37,7 @@ $pape_policy_uris = array(
 			  PAPE_AUTH_PHISHING_RESISTANT
 			  );
 
-function &getStore() {
+function getStore() {
     /**
      * This is where the example will store its OpenID information.
      * You should change this path if you want the example store to be
@@ -58,9 +52,10 @@ function &getStore() {
             " Please check the effective permissions.";
         exit(0);
     }
-	$r = new Auth_OpenID_FileStore($store_path);
-
-    return $r;
+    if (!is_writable($store_path)) {
+        throw new Exception('Please check the effective permissions of tmp storage path '. $store_path);
+    }
+    return new Auth_OpenID_FileStore($store_path);
 }
 
 function &getConsumer() {
@@ -69,8 +64,8 @@ function &getConsumer() {
      * earlier.
      */
     $store = getStore();
-	$r = new Auth_OpenID_Consumer($store);
-    return $r;
+    $consumer = new Auth_OpenID_Consumer($store);
+    return $consumer;
 }
 
 function getScheme() {

@@ -946,13 +946,13 @@ class Camp_DB extends GenericBaseClass {
   protected function _setAdmin() {
     $this->doDebug("_setAdmin()");
     $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}people SET boolIsAdmin=1 WHERE intPersonID='{$this->intPersonID}'");
-    $this->generateNewAdminKey($resource);
+    $this->generateNewAdminKey();
   }
 
   protected function _setSupport() {
     $this->doDebug("_setSupport()");
     $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}people SET boolIsSupport=1 WHERE intPersonID='{$this->intPersonID}'");
-    $this->generateNewSupportKey($resource);
+    $this->generateNewSupportKey();
   }
 
   function mergeContactDetails($strAuthString) {

@@ -24,11 +24,13 @@ $now=$now_and_next['now'];
 $next=$now_and_next['next'];
 
 $contact_fields=array('mailto', 'twitter', 'linkedin', 'identica', 'statusnet', 'facebook', 'irc', 'http', 'https');
+$event_title = CampUtils::arrayGet($Camp_DB->config, 'event_title', 'an undefined event');
+$event_details = CampUtils::arrayGet($Camp_DB->config, 'AboutTheEvent',  'Event details go here.');
 
-?>
+ ?>
 <html>
   <head>
-  <title><?php echo $Camp_DB->config['event_title']; ?></title>
+  <title><?php echo $event_title; ?></title>
   <link rel="stylesheet" type="text/css" href="common_style.php" />
   <script type="text/javascript" src="external/jquery-1.4.2.min.js"></script>
   <script type="text/javascript" src="external/jquery.marquee.js"></script>
@@ -64,7 +66,7 @@ switch(CampUtils::arrayGet($_REQUEST,'state','')) {
 }
 
 if(!isset($_SESSION['openid'])) {
-  echo "<h1>Login to CampFireManager for " . CampUtils::arrayGet($Camp_DB->config, 'event_title', 'an undefined event') . "</h1>";
+  echo "<h1>Login to CampFireManager for $event_title</h1>";
   if(isset($err)) {echo '<div id="verify-form" class="error">'.$err.'</div>';}
   if(isset($_GET['reason'])) {echo '<div id="verify-form" class="error">Reason: ' . $_GET['reason'] . '</div>';}
   echo '<div id="verify-form"><table width="100%"><tr>
@@ -106,13 +108,13 @@ if(!isset($_SESSION['openid'])) {
 </tr>
 </table>
 </div>';
-  echo "<div class=\"EventDetails\">" . CampUtils::arrayGet($Camp_DB->config, 'AboutTheEvent', '') . "</div>";
+  echo "<div class=\"EventDetails\">$event_details</div>";
   if(!isset($_SESSION['redirect'])) {
     echo '<div id="mainbody" class="mainbody"></div><script type="text/javascript">update();</script>';
   }
 } else {
   $Camp_DB->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>CampUtils::arrayGet($_SESSION, 'name', ''), 'OpenID_Mail'=>CampUtils::arrayGet($_SESSION, 'email', '')));
-  echo "<h1 class=\"headerbar\">" . CampUtils::arrayGet($Camp_DB->config, 'event_title', 'A CampFireManager Event') . "</h1>\r\n";
+  echo "<h1 class=\"headerbar\">$event_title</h1>\r\n";
   switch(CampUtils::arrayGet($_REQUEST, 'state', '')) {
     case "O":
       $arrAuthString=$Camp_DB->getAuthStrings();
