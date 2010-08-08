@@ -119,10 +119,10 @@ class Camp_DB extends GenericBaseClass {
     // Check for a Phone Account
     if(isset($me['number'])) {
       $me['number']=$this->escape($me['number']);
-      $me['phone']=$this->escape($me['phone']);
+      if(isset($me['phone'])) {$me['phone']=$this->escape($me['phone']);} else {$me['phone']='';}
       $me['phone_nick']="Someone with a mobile number ending " . substr($me['number'], -4);
       $where="strPhoneNumber='{$me['number']}'";
-      if(strtoupper(substr($me['text'], 0, 2))=="O ") {
+      if(isset($me['text']) and strtoupper(substr($me['text'], 0, 2))=="O ") {
         $commands=explode(" ", $msg['text']);
         $where.=" OR strAuthString='{$commands[1]}'";
       }
