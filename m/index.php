@@ -1,4 +1,4 @@
-<?php 
+<?php
 /*******************************************************
  * CampFireManager
  * Public facing Mobile web page
@@ -13,6 +13,10 @@
 
 if(session_id()==='') {session_start();}
 if(isset($_SESSION['redirect'])) {unset($_SESSION['redirect']);}
+if(isset($_SESSION['openid']) and isset($_GET['logout'])) {
+  $_SESSION['redirect']='m';
+  header("Location: ..\?state=logout");
+}
 if(!isset($_SESSION['openid']) and isset($_GET['login'])) {
   $_SESSION['redirect']='m';
   header("Location: ..");
@@ -95,19 +99,37 @@ if($next_talks!='') {echo "<h3>Talks on next (starts at " . $Camp_DB->arrTimeEnd
 if(!isset($_SESSION['openid'])) {
   echo "<a href=\"?login\">Login to CampFireManager</a>";
 } else {
+  echo "<a href=\"?logout\">Logout from CampFireManager</a>";
   if(isset($_GET['list']) or isset($_GET['my'])) {
+    if(isset($_GET['attend'])) {
+      $Camp_DB->attendTalk($_GET['attend']);
+      $Camp_DB->refresh();
+    }
+    if(isset($_GET['noattend'])) {
+      $Camp_DB->declineTalk($_GET['noattend']);
+      $Camp_DB->refresh();
+    }
     if(isset($_GET['list'])) {echo "<h2>List talks yet to start</h2>";} else {echo "<h2>List my talks yet to start</h2>";}
     $person=$Camp_DB->allMyDetails();
+    $present=$Camp_DB->getMyTalks();
+    $attend=$Camp_DB->getTalksIAmAttending();
     foreach($Camp_DB->times as $intTimeID=>$arrTime) {
       if($intTimeID>$now) {
         foreach($Camp_DB->arrTalkSlots[$intTimeID] as $intRoomID=>$intTalkID) {
           if(!isset($showtalk[$intTalkID]) and $intTalkID>0) {
             if(!isset($_GET['my']) or $Camp_DB->arrTalks[$intTalkID]['intPersonID']==$person['intPersonID']) {
               echo "Talk $intTalkID: " . $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'];
-              if($Camp_DB->arrTalks[$intTalkID]['intPersonID']==$person['intPersonID']) {
+              if(isset($present[$intTalkID])) {
                 echo " <a href=\"$baseurl?edit=$intTalkID\">Edit</a> | <a href=\"$baseurl?delete=$intTalkID\">Delete</a>";
               } else {
                 echo " by " . $Camp_DB->arrTalks[$intTalkID]['strPresenter'];
+                if(isset($_GET['list'])) {$list='list';}
+                if(isset($_GET['my'])) {$list='my';}
+                if(isset($attend[$intTalkID])) {
+                  echo " <a href=\"{$baseurl}?{$list}&noattend={$intTalkID}\">I am attending this talk</a>";
+                } else {
+                  echo " <a href=\"{$baseurl}?{$list}&attend={$intTalkID}\">I will attend this talk</a>";
+                }
               }
               echo "<br />";
             }
