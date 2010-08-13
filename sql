@@ -86,5 +86,6 @@ CREATE TABLE `talks` (
 CREATE TABLE `times` (
   `intTimeID` int(11) NOT NULL AUTO_INCREMENT,
   `strTime` varchar(100) NOT NULL,
+  `intTimeType` int(1) NOT NULL,
   PRIMARY KEY (`intTimeID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
