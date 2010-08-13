@@ -31,26 +31,39 @@ if(!isset($_SESSION['openid'])) {
 if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by default!!
   header("Location: $baseurl?state=Oa&AuthString={$Camp_DB->config['adminkey']}");
 } elseif($Camp_DB->checkAdmin()==1) { // Otherwise you'll only get it if you're in the admin list
-  $config_fields=array( 'lunch'=>'Lunchtime',
-                        'website'=>"The public URL of this site. Leave blank if you don't want public access.",
-                        'event_title'=>'What is the title of your event?',
-                        'FixRoomOffset'=>'Relative to the start time of a session, at what point is the room allocated to a talk fixed?',
-                        'UTCOffset'=>'The UTC offset for the timezone, e.g. +00:00 for GMT or -08:00 for Pacific Standard Time.',
-                        'timezone_name'=>'This is the name of your timezone (e.g. Europe/London)',
-                        'AboutTheEvent'=>'Please provide some details about the content of your event.',
-                        'hashtag'=>"Optional: What do you want people (including this script) to use as the hashtag for today?, including the # sign itself.");
+  $config_fields=array('website'=>"The public URL of this site. Leave blank if you don't want public access.",
+                       'event_title'=>'What is the title of your event?',
+                       'FixRoomOffset'=>'Relative to the start time of a session, at what point is the room allocated to a talk fixed?',
+                       'UTCOffset'=>'The UTC offset for the timezone, e.g. +00:00 for GMT or -08:00 for Pacific Standard Time.',
+                       'timezone_name'=>'This is the name of your timezone (e.g. Europe/London)',
+                       'AboutTheEvent'=>'Please provide some details about the content of your event.',
+                       'hashtag'=>"Optional: What do you want people (including this script) to use as the hashtag for today?, including the # sign itself.");
 
   if(isset($_POST['update_config'])) {
-    foreach($config_fields as $field=>$description) {
+    foreach($config_fields as $field=>$strTime) {
       $Camp_DB->setConfig($field, stripslashes(CampUtils::arrayGet($_POST, $field, '')));
     }
   }
   if(isset($_POST['update_times'])) {
-    foreach($Camp_DB->times as $value=>$description) {$Camp_DB->updateTime($value, $_POST['time_' . $value]);}
-    if($_POST['time_new']!='') {$Camp_DB->updateTime('', $_POST['time_new']);}
+    $Camp_DB->boolUpdateOrInsertSql("TRUNCATE {$Camp_DB->prefix}times");
+    foreach($_POST as $key=>$value) {
+      if('time_'==substr($key, 0, 5)) {
+        $Camp_DB->updateTime('', trim($value), $_POST['break_' . substr($key, 5)]);
+      }
+    }
+    $Camp_DB->refresh();
+  }
+  if(isset($_POST['update_time_types'])) {
+    $Camp_DB->boolUpdateOrInsertSql("TRUNCATE {$Camp_DB->prefix}timetypes");
+    foreach($_POST as $key=>$value) {
+      if('timetype_'==substr($key, 0, 9)) {
+        $Camp_DB->updateTimeType('', trim($value));
+      }
+    }
+    $Camp_DB->refresh();
   }
   if(isset($_POST['update_rooms'])) {
-    foreach($Camp_DB->rooms as $value=>$description) {
+    foreach($Camp_DB->rooms as $value=>$strTime) {
       $Camp_DB->updateRoom($value, $_POST['room_' . $value], $_POST['capacity_' . $value]);
     }
     if($_POST['room_new']!='' AND $_POST['capacity_new']!='') {
@@ -68,9 +81,10 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
     foreach($arrMbs as $intMbID=>$arrMb) {$Camp_DB->updateMb($intMbID, $_POST['mb_api_' . $intMbID], $_POST['mb_user_' . $intMbID], $_POST['mb_pass_' . $intMbID]);}
     if($_POST['mb_api_new']!='' AND $_POST['mb_user_new']!='' AND $_POST['mb_pass_new']!='') {$Camp_DB->updateMb('', $_POST['mb_api_new'], $_POST['mb_user_new'], $_POST['mb_pass_new']);}
   }
+  $Camp_DB->refresh();
   $arrPhones=$Camp_DB->getPhones();
   $arrMbs=$Camp_DB->getMicroBloggingAccounts();
-  $Camp_DB->refresh();
+  $arrTimeTypes = $Camp_DB->getTimeTypes();
   $event_title =CampUtils::arrayGet($Camp_DB->config, 'event_title', 'CampfireDefaultEvent');
   echo "<html>
 <head>
@@ -84,21 +98,11 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
   <tr><td><a href=\"$baseurl\" class=\"Label\">Back to main screen</a></td></tr>
   <tr><th colspan=\"2\">Admin Console for Config Options (empty boxes will unset those values in the database)</th></tr>
   <tr><td class=\"Label\">Next Admin Key (note: each use will change this value)</td><td class=\"Data\">{$Camp_DB->config['adminkey']}</td></tr>
-  <tr><td class=\"Label\">Next Support Key (note: each use will change this value)</td><td class=\"Data\">{$Camp_DB->config['supportkey']}</td></tr>
-  <tr><td class=\"Label\">Lunch Time</td><td class=\"Data\"><select name=\"lunch\">";
-  foreach($Camp_DB->times as $time=>$description) {
-    $lunch = CampUtils::arrayGet($Camp_DB->config, 'lunch', '');
-    if($lunch == $time) {
-      echo "<option value=\"$time\" selected=\"selected\">$description</option>";
-    } else {
-      echo "<option value=\"$time\">$description</option>";
-    }
-  }
-  echo "</select></td></tr>";
-  foreach($config_fields as $value=>$description) {
+  <tr><td class=\"Label\">Next Support Key (note: each use will change this value)</td><td class=\"Data\">{$Camp_DB->config['supportkey']}</td></tr>";
+  foreach($config_fields as $value=>$strTime) {
     $valueStr = CampUtils::arrayGet($Camp_DB->config, $value, '');
     if ($value!='lunch') {
-      echo "  <tr><td class=\"Label\">$description</td><td class=\"Data\"><input type=\"text\" name=\"$value\" size=\"25\" value=\"" . $valueStr . "\"></td></tr>";
+      echo "  <tr><td class=\"Label\">$strTime</td><td class=\"Data\"><input type=\"text\" name=\"$value\" size=\"25\" value=\"$valueStr\"></td></tr>";
     }
   }
   echo "<tr><td colspan=\"2\"><input type=\"submit\" value=\"Update Configuration\"></form>";
@@ -146,19 +150,38 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
 <tr><td><form method=\"post\" action=\"{$baseurl}admin.php#time\" class=\"WholeDay\">
 <input type=\"hidden\" name=\"update_times\" value=\"TRUE\">
 <table>
-  <tr><th colspan=\"2\">Time Options (please sort these manually by time)</th></tr>
-  <tr><th>Time Slot</th><th>Period in the format HH:MM-HH:MM</th></tr>";
-  foreach($Camp_DB->times as $time=>$description) {echo "
+  <tr><th colspan=\"3\">Time Options (please sort these manually by time)</th></tr>
+  <tr><th>Time Slot</th><th>Period in the format HH:MM-HH:MM</th><th>Break type</th></tr>";
+  foreach($Camp_DB->times as $intTimeID=>$arrTime) {
+    $strTime = $arrTime['strTime'];
+    $intTimeType = $arrTime['intTimeType'];
+    $break_options='<option value="0">Empty</option>';
+    if(is_array($arrTimeTypes) and count($arrTimeTypes)>0) {
+      foreach($arrTimeTypes as $intTimeTypeID => $strTimeType) {
+        if($intTimeTypeID == $intTimeType) {$selected = 'selected="selected"';} else {$selected = '';}
+        $break_options.='<option value="' . $intTimeTypeID . '" ' . $selected . '>' . $strTimeType . '</option>';
+      }
+    }
+    echo "
   <tr>
-    <td class=\"Label\">$time</td>
-    <td class=\"Data\"><input type=\"text\" name=\"time_$time\" size=\"10\" value=\"$description\"></td>
-  </tr>";}
+    <td class=\"Label\">$intTimeID</td>
+    <td class=\"Data\"><input type=\"text\" name=\"time_$intTimeID\" size=\"10\" value=\"$strTime\"></td>
+    <td class=\"Data\"><select name=\"break_$intTimeID\">$break_options</select></td>
+  </tr>";
+  }
+  $break_options='<option value="0">Empty</option>';
+  if(is_array($arrTimeTypes) and count($arrTimeTypes)>0) {
+    foreach($arrTimeTypes as $intTimeTypeID => $strTimeType) {
+      $break_options.='<option value="' . $intTimeTypeID . '">' . $strTimeType . '</option>';
+    }
+  }
   echo "
   <tr>
     <td class=\"Label\">New Time Slot</td>
     <td class=\"Data\"><a name=\"time\"><input type=\"text\" name=\"time_new\" size=\"10\" value=\"\"></td>
+    <td class=\"Data\"><select name=\"break_new\">$break_options</select></td>
   </tr>";
-  echo "<tr><td colspan=\"2\"><input type=\"submit\" value=\"Update Times\">";
+  echo "<tr><td colspan=\"3\"><input type=\"submit\" value=\"Update Times\">";
   echo "</table></form></td>
 <td><form method=\"post\" action=\"{$baseurl}admin.php#room\" class=\"WholeDay\">
 <input type=\"hidden\" name=\"update_rooms\" value=\"TRUE\">
@@ -178,7 +201,30 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
     <td class=\"Data\"><input type=\"text\" name=\"capacity_new\" size=\"4\" value=\"\"></td>
   </tr>";
   echo "<tr><td colspan=\"3\"><input type=\"submit\" value=\"Update Configuration\">";
-  echo "</table></form></td></tr></table>";
+  echo "</table></form></td></tr>";
+  echo "<tr><td><form method=\"post\" action=\"{$baseurl}admin.php#timetype\" class=\"WholeDay\">
+<input type=\"hidden\" name=\"update_time_types\" value=\"TRUE\">
+<table>
+  <tr><th colspan=\"2\">Break Types</th></tr>
+  <tr><th>Break ID</th><th>Break type</th></tr>";
+  if(is_array($Camp_DB->timetypes) and count($Camp_DB->timetypes)>0) {
+    foreach($Camp_DB->timetypes as $intTimeTypeID=>$strTimeType) {
+      echo "
+  <tr>
+    <td class=\"Label\">$intTimeTypeID</td>
+    <td class=\"Data\"><input type=\"text\" name=\"timetype_$intTimeTypeID\" size=\"10\" value=\"$strTimeType\"></td>
+  </tr>";
+    }
+  }
+  echo "
+  <tr>
+    <td class=\"Label\">New Break Type</td>
+    <td class=\"Data\"><a name=\"timetype\"><input type=\"text\" name=\"timetype_new\" size=\"10\" value=\"\"></td>
+  </tr>";
+  echo "<tr><td colspan=\"2\"><input type=\"submit\" value=\"Update Times\">";
+  echo "</table></form></td>";
+  echo "<td>&nbsp;</td></tr>";
+  echo "</table>";
 } else {
   header("Location: $baseurl");
 }

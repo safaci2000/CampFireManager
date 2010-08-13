@@ -62,12 +62,12 @@ $now_and_next=$Camp_DB->getNowAndNextTime();
 $now=$now_and_next['now'];
 $next=$now_and_next['next'];
 
-$is_lunch=0;
+$break_name="";
 $now_talks='';
 if($now>0) {
   foreach($Camp_DB->arrTalkSlots[$now] as $intRoomID=>$intTalkID) {
-    if($intTalkID==-1) {
-      $is_lunch=1;
+    if($intTalkID<0) {
+      $break_name=$Camp_DB->timetypes[-$intTalkID];
     } elseif($intTalkID==0) {
     } elseif(isset($Camp_DB->arrTalks[$intTalkID]['boolIsFixed'])) {
       $now_talks.=$Camp_DB->rooms[$intRoomID]["strRoom"] . ' - ' . $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . '<br />';
@@ -76,14 +76,13 @@ if($now>0) {
     }
   }
 }
-if($is_lunch==1) {$now_talks="Lunch<br />" . $now_talks;}
-
-$is_lunch=0;
+if($break_name!="") {$now_talks="{$break_name}<br />" . $now_talks;}
+$break_name="";
 $next_talks='';
 if($next>0) {
   foreach($Camp_DB->arrTalkSlots[$next] as $intRoomID=>$intTalkID) {
-    if($intTalkID==-1) {
-      $is_lunch=1;
+    if($intTalkID<0) {
+      $break_name=$Camp_DB->timetypes[-$intTalkID];
     } elseif($intTalkID==0) {
     } elseif(isset($Camp_DB->arrTalks[$intTalkID]['boolIsFixed'])) {
       $next_talks.=$Camp_DB->rooms[$intRoomID]["strRoom"] . ' - ' . $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . '<br />';
@@ -92,14 +91,11 @@ if($next>0) {
     }
   }
 }
-if($is_lunch==1) {$next_talks="Lunch<br />" . $next_talks;}
+if($break_name!="") {$next_talks="{$break_name}<br />" . $next_talks;}
 if($now_talks!='' and $next_talks!='') {echo '<h2>On Now and Next</h2>';}
 if($now_talks!='') {echo "<h3>Talks on now: (started at " . $Camp_DB->arrTimeEndPoints[$now]['s'] . "):</h3>$now_talks";}
 if($next_talks!='') {echo "<h3>Talks on next (starts at " . $Camp_DB->arrTimeEndPoints[$next]['s'] . "):</h3>$next_talks";}
-if(!isset($_SESSION['openid'])) {
-  echo "<a href=\"?login\">Login to CampFireManager</a>";
-} else {
-  echo "<a href=\"?logout\">Logout from CampFireManager</a>";
+if(isset($_SESSION['openid'])) {
   if(isset($_GET['list']) or isset($_GET['my'])) {
     if(isset($_GET['attend'])) {
       $Camp_DB->attendTalk($_GET['attend']);
@@ -170,6 +166,11 @@ if(!isset($_SESSION['openid'])) {
   echo "<a href=\"$baseurl?list\">List talks which are yet to start</a><br />"; 
   echo "<a href=\"$baseurl?my\">List my talks which are yet to start</a><br />"; 
   echo "<a href=\"$baseurl?contact\">Change my contact details</a><br />";
+}
+if(!isset($_SESSION['openid'])) {
+  echo "<a href=\"?login\">Login to CampFireManager</a>";
+} else {
+  echo "<a href=\"?logout\">Logout from CampFireManager</a>";
 }
 ?>
 </body>

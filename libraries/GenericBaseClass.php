@@ -4,11 +4,11 @@ require_once($base_dir . "common_functions.php");
 
 abstract class GenericBaseClass {
   // SQL Data
+  public $prefix;
   protected $resource;
-  protected $prefix;
 
+  // Debug Data
   protected $_intDebug;
-
   protected $_strDebug;
 
   function __construct($db_host, $db_user, $db_pass, $db_base, $db_prefix='', $debug=0) {
@@ -19,7 +19,6 @@ abstract class GenericBaseClass {
     if($db_prefix!='') {
       $this->prefix=$db_prefix . '_';
     }
-
   }
 
   function setDebug($state=0) {

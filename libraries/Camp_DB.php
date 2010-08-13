@@ -32,6 +32,7 @@ class Camp_DB extends GenericBaseClass {
   public $contact_fields = array('mailto', 'twitter', 'linkedin', 'identica', 'statusnet', 'facebook', 'irc', 'http', 'https');
 
   public $times = array();
+  public $timetypes = array();
   public $rooms = array();
   public $config = array();
 
@@ -53,7 +54,9 @@ class Camp_DB extends GenericBaseClass {
   }
 
   function refresh() {
+    $this->doDebug("refresh()");
     $this->today = date("Y-m-d");
+    $this->timetypes = $this->getTimeTypes();
     $this->times = $this->getTimes();
     $this->rooms = $this->getRooms();
     $this->config = $this->getConfig();
@@ -80,13 +83,15 @@ class Camp_DB extends GenericBaseClass {
     // Find the "Now" and "Next" time blocks
     $now = 0;
     $next = '';
-    foreach($this->times as $time => $timestring) {
-      $intTime = strtotime(date("Y-m-d ") . $this->arrTimeEndPoints[$time]['s']);
+    foreach($this->times as $intTimeID => $arrTime) {
+      $timestring = $arrTime['strTime'];
+      $timetype = $arrTime['intTimeType'];
+      $intTime = strtotime(date("Y-m-d ") . $this->arrTimeEndPoints[$intTimeID]['s']);
       if ($intTime < $now_time) {
-        $now = $time;
+        $now = $intTimeID;
       }
       if ($intTime >= $now_time) {
-        $next = $time;
+        $next = $intTimeID;
         break;
       }
     }
@@ -95,7 +100,9 @@ class Camp_DB extends GenericBaseClass {
 
   function makeTimeArray() {
     if(count($this->arrTimeEndPoints)==0) {
-      foreach($this->times as $intTimeID=>$strTime) {
+      foreach($this->times as $intTimeID => $arrTime) {
+        $strTime = $arrTime['strTime'];
+        $intTimeType = $arrTime['intTimeType'];
         $timearray=explode('-', $strTime);
         $this->arrTimeEndPoints[$intTimeID]['s']=$timearray[0];
         $this->arrTimeEndPoints[$intTimeID]['e']=$timearray[1];
@@ -280,17 +287,35 @@ class Camp_DB extends GenericBaseClass {
     }
   }
 
-  function updateTime($intTimeID, $value) {
-    $this->doDebug("updateTime($intTimeID, $value);");
-    if(!isset($this->times[$intTimeID]) AND $value!='') {$this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}times (strTime) VALUES ('$value')");}
-    if($this->times[$intTimeID]!=$value AND $value!='') {$this->boolUpdateOrInsertSql("UPDATE {$this->prefix}times SET strTime='$value' WHERE intTimeID='$intTimeID'");}
-    if($this->times[$intTimeID]!='' AND $value=='') {
+  function updateTime($intTimeID, $strTime, $intTimeType) {
+    $this->doDebug("updateTime($intTimeID, $strTime, $intTimeType);");
+    if($intTimeID=='' AND $strTime!='') {
+      $this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}times (strTime, intTimeType) VALUES ('$strTime', '$intTimeType')");
+    } elseif(is_array($this->times) and isset($this->times[$intTimeID]) and $this->times[$intTimeID]['strTime']!=$strTime AND $strTime!='') {
+      $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}times SET strTime='$strTime', intTimeType='$intTimeType' WHERE intTimeID='$intTimeID'");
+    } elseif(is_array($this->times) and isset($this->times[$intTimeID]) and $this->times[$intTimeID]['strTime']!='' AND $strTime=='') {
       $this->boolUpdateOrInsertSql("TRUNCATE {$this->prefix}times");
-      foreach($this->times as $old_intTimeID=>$strTime) {
-        if($old_intTimeID!=$intTimeID) {$this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}times (strTime) VALUES ('$strTime')");}
+      foreach($this->times as $old_intTimeID=>$arrTime) {
+        $strTime=$arrTime['strTime'];
+        if($old_intTimeID!=$intTimeID) {$this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}times (strTime, intTimeType) VALUES ('$strTime', '$intTimeType')");}
       }
     }
   }
+
+  function updateTimeType($intTimeTypeID, $strTimeType) {
+    $this->doDebug("updateTimeType($intTimeTypeID, $strTimeType);");
+    if($intTimeTypeID=='' AND $strTimeType!='') {
+      $this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}timetypes (strTimeType) VALUES ('$strTimeType')");
+    } elseif(is_array($this->timetypes) and isset($this->timetypes[$intTimeTypeID]) and $this->timetypes[$intTimeTypeID]!=$strTimeType AND $strTimeType!='') {
+      $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}timetypes SET strTimeType='$strTimeType' WHERE intTimeTypeID='$intTimeTypeID'");
+    } elseif(is_array($this->timetypes) and isset($this->timetypes[$intTimeTypeID]) and $this->timetypes[$intTimeTypeID]!='' AND $strTimeType=='') {
+      $this->boolUpdateOrInsertSql("TRUNCATE {$this->prefix}timetypes");
+      foreach($this->timetypes as $old_intTimeTypeID=>$old_strTimeType) {
+        if($old_intTimeTypeID!=$intTimeTypeID and $old_strTimeType) {$this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}timetypes (strTimeType) VALUES ('$strTimeType')");}
+      }
+    }
+  }
+
 
   function updateRoom($intRoomID, $strRoom, $intCapacity) {
     error_log('>>>>>>>>>>>>>>>>'. $intRoomID . '/'. $strRoom .'/'. $intCapacity);
@@ -436,9 +461,14 @@ class Camp_DB extends GenericBaseClass {
     return $this->qryArray("SELECT * FROM {$this->prefix}rooms", 'intRoomID');
   }
 
+  function getTimeTypes() {
+    $this->doDebug("getTimeTypes();");
+    return $this->qryMap('intTimeTypeID', 'strTimeType', "{$this->prefix}timetypes");
+  }
+
   function getTimes() {
     $this->doDebug("getTimes();");
-    return $this->qryMap('intTimeID', 'strTime', "{$this->prefix}times");
+    return $this->qryArray("SELECT * FROM {$this->prefix}times", 'intTimeID');
   }
 
   function getTalks() {
@@ -629,7 +659,7 @@ class Camp_DB extends GenericBaseClass {
               }
               if($roomfree==1) {
                 $intTalkID=$this->_createTalk($time, $room, $this->intPersonID, $talk, $boolFixed, $length);
-                $this->updateStatusScreen("{$this->strName} proposed a talk about '$talk' at {$this->times[$time]}. It is talk number $intTalkID.");
+                $this->updateStatusScreen("{$this->strName} proposed a talk about '$talk' into the slot {$this->times[$time]['strTime']}. It is talk number $intTalkID.");
                 $this->sortRooms();
                 return $intTalkID;
               }
@@ -638,7 +668,7 @@ class Camp_DB extends GenericBaseClass {
         }
         if($intTalkID==0) {
           $time++;
-          if($time==$this->config['lunch']) {$time++;} // An automatic allocation shouldn't push your talk into lunch. You must only select it.
+          if($this->times[$time]['intTimeType']!=0) {$time++;} // An automatic allocation shouldn't push your talk into lunch. You must only select it.
           if($time>count($this->times)) {$stop=TRUE;}
         }
       }
@@ -692,16 +722,12 @@ class Camp_DB extends GenericBaseClass {
     $arrAttendanceByTalks=$this->getAttendeesCount();
     $arrPeopleAsPresentersOnly=$this->getPresenters();
     
-    if(isset($this->config['lunch'])) {$lunchtime=$this->config['lunch'];} else {$lunchtime=0;}
-    
     // Prepopulate the talk table with "empty" and "lunch" slots
-    foreach($this->times as $time=>$data_time) {
+    foreach($this->times as $intTimeID => $arrTime) {
+      $strTime = $arrTime['strTime'];
+      $intTimeType = $arrTime['intTimeType'];
       foreach($this->rooms as $room=>$data_room) {
-        if($time!=$lunchtime) {
-          $arrTalkSlots[$time][$room]=0;
-        } else {
-          $arrTalkSlots[$time][$room]=-1;
-        }
+        $arrTalkSlots[$intTimeID][$room]=-$intTimeType;
       }
     }
 
@@ -766,7 +792,9 @@ class Camp_DB extends GenericBaseClass {
       }
     }
     $this->doDebug("Initial results: " . print_r(array('arrTalks'=>$this->arrTalks, 'used_room'=>$used_room, 'arrUnfixedTalks'=>$arrUnfixedTalks, 'arrLongTalks'=>$arrLongTalks), TRUE) . "", 2);
-    foreach($this->times as $intTimeID=>$strTime) {
+    foreach($this->times as $intTimeID => $arrTime) {
+      $strTime = $arrTime['strTime'];
+      $intTimeType = $arrTime['intTimeType'];
       if(count($arrLongTalks[$intTimeID])>0) {
         foreach($arrLongTalks[$intTimeID] as $intTalkID=>$null) {
           if($used_room[$intTimeID][$this->arrTalks[$intTalkID]['intRoomID']]==0) {
@@ -1015,7 +1043,11 @@ class Camp_DB extends GenericBaseClass {
   function getAdmins() {
     $this->doDebug("getAdmins()");
     $return=$this->qryMap('"admins"', 'count(boolIsAdmin)', "{$this->prefix}people WHERE boolIsAdmin!=0");
-    return($return['admins']);
+    if(count($return) == 0) {
+      return(0);
+    } else {
+      return($return['admins']);
+    }
   }
   function checkAdmin() {return($this->isAdmin);}
 
@@ -1058,7 +1090,9 @@ class Camp_DB extends GenericBaseClass {
       $mainbody .="<table class=\"WholeDay\">\r\n";
       $mainbody.="  <thead>\r\n";
       $mainbody.="    <tr class=\"Time_title\">\r\n";
-      foreach($this->times as $intTimeID=>$strTime) {
+      foreach($this->times as $intTimeID => $arrTime) {
+        $strTime = $arrTime['strTime'];
+        $intTimeType = $arrTime['intTimeType'];
         if($intTimeID==$this->now_time) {$strTime.="<br />(On Now)";} elseif ($intTimeID==$this->next_time) {$strTime.="<br />(Next)";}  
         $mainbody.="      <th class=\"Time_title\">Slot $intTimeID<br />$strTime";
         if($intTimeID>$this->now_time && $includeProposeLink==TRUE) {$mainbody.="<br /><a href=\"?state=P&slot=$intTimeID\">New Talk</a>";}
@@ -1068,14 +1102,16 @@ class Camp_DB extends GenericBaseClass {
       $mainbody.="  </thead>\r\n";
       $mainbody.="  <tbody>\r\n";
 
-      foreach($this->rooms as $intRoomID=>$arrRoom) {
+      foreach($this->rooms as $intRoomID => $arrRoom) {
         $mainbody.="    <tr class=\"Room{$intRoomID}\">\r\n";
-        foreach($this->times as $intTimeID=>$strTime) {
+        foreach($this->times as $intTimeID => $arrTime) {
+          $strTime = $arrTime['strTime'];
+          $intTimeType = $arrTime['intTimeType'];
           if($this->arrTalkSlots[$intTimeID][$intRoomID]<=0) {
             if($intTimeID==$this->now_time) {$class=" Now";} elseif ($intTimeID==$this->next_time) {$class=" Next";}  else {$class="";}
             $mainbody.="<td class=\"Entry Time{$intTimeID}{$class}\">\r\n<table class=\"EntryBody\">\r\n<tr class=\"EntryBody\"><td class=\"EntryBody\">";
-            if($this->arrTalkSlots[$intTimeID][$intRoomID]==-1) {
-              $mainbody.="Lunch";
+            if($this->arrTalkSlots[$intTimeID][$intRoomID]<0) {
+              $mainbody.=$this->timetypes[-$this->arrTalkSlots[$intTimeID][$intRoomID]];
             } else {
               $mainbody.="Empty";
             }
