@@ -379,14 +379,18 @@ class Camp_DB extends GenericBaseClass {
 
   function generateNewAdminKey() {
     $this->doDebug("generateNewAdminKey();");
-    $this->boolUpdateOrInsertSql("REPLACE INTO {$this->prefix}config (strConfig, strValue) VALUES ('adminkey', '" . genRandStr(10, 10) . "')"); 
-    $this->config=$this->getConfig();
+    if(1==CampUtils::arrayGet($this->config, 'admin_regen', 1)) {
+      $this->boolUpdateOrInsertSql("REPLACE INTO {$this->prefix}config (strConfig, strValue) VALUES ('adminkey', '" . genRandStr(10, 10) . "')");
+      $this->config=$this->getConfig();
+    }
   }
 
   function generateNewSupportKey() {
     $this->doDebug("generateNewSupportKey();");
-    $this->boolUpdateOrInsertSql("REPLACE INTO {$this->prefix}config (strConfig, strValue) VALUES ('supportkey', '" . genRandStr(10, 10) . "')"); 
-    $this->config=$this->getConfig();
+    if(1==CampUtils::arrayGet($this->config, 'support_regen', 1)) {
+      $this->boolUpdateOrInsertSql("REPLACE INTO {$this->prefix}config (strConfig, strValue) VALUES ('supportkey', '" . genRandStr(10, 10) . "')");
+      $this->config=$this->getConfig();
+    }
   }
 
   function updatePhoneData($strPhoneID, $intSignal) {$this->boolUpdateOrInsertSql("UPDATE {$this->prefix}account_phones SET intSignal='$intSignal' WHERE strGammuRef='$strPhoneID'");}

@@ -31,7 +31,9 @@ if(!isset($_SESSION['openid'])) {
 if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by default!!
   header("Location: $baseurl?state=Oa&AuthString={$Camp_DB->config['adminkey']}");
 } elseif($Camp_DB->checkAdmin()==1) { // Otherwise you'll only get it if you're in the admin list
-  $config_fields=array('website'=>"The public URL of this site. Leave blank if you don't want public access.",
+  $config_fields=array('admin_regen'=>'',
+                       'support_regen'=>'',
+                       'website'=>"The public URL of this site. Leave blank if you don't want public access.",
                        'event_title'=>'What is the title of your event?',
                        'FixRoomOffset'=>'Relative to the start time of a session, at what point is the room allocated to a talk fixed?',
                        'UTCOffset'=>'The UTC offset for the timezone, e.g. +00:00 for GMT or -08:00 for Pacific Standard Time.',
@@ -96,13 +98,40 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
 <input type=\"hidden\" name=\"update_config\" value=\"TRUE\">
 <table>
   <tr><td><a href=\"$baseurl\" class=\"Label\">Back to main screen</a></td></tr>
-  <tr><th colspan=\"2\">Admin Console for Config Options (empty boxes will unset those values in the database)</th></tr>
-  <tr><td class=\"Label\">Next Admin Key (note: each use will change this value)</td><td class=\"Data\">{$Camp_DB->config['adminkey']}</td></tr>
-  <tr><td class=\"Label\">Next Support Key (note: each use will change this value)</td><td class=\"Data\">{$Camp_DB->config['supportkey']}</td></tr>";
-  foreach($config_fields as $value=>$strTime) {
+  <tr><th colspan=\"2\">Admin Console for Config Options (empty boxes will unset those values in the database)</th></tr>";
+  foreach($config_fields as $value=>$data) {
     $valueStr = CampUtils::arrayGet($Camp_DB->config, $value, '');
-    if ($value!='lunch') {
-      echo "  <tr><td class=\"Label\">$strTime</td><td class=\"Data\"><input type=\"text\" name=\"$value\" size=\"25\" value=\"$valueStr\"></td></tr>";
+    switch($value) {
+      case 'admin_regen':
+        if(1==CampUtils::arrayGet($Camp_DB->config, $value, 1)) {
+          $regen="checked";
+          $noregen="";
+        } else {
+          $regen="";
+          $noregen="checked";
+        }
+        echo "<tr><td class=\"Label\">Next Admin Key</td><td class=\"Data\">{$Camp_DB->config['adminkey']}</td></tr>";
+        echo "<tr><td class=\"Label\">Should the admin key regenerate each time it's used?</td><td class=\"Data\">";
+        echo "<input type=\"radio\" name=\"admin_regen\" value=\"1\" $regen> Yes ";
+        echo "<input type=\"radio\" name=\"admin_regen\" value=\"0\" $noregen> No";
+        echo "</td></tr>";
+        break;
+      case 'support_regen':
+        if(1==CampUtils::arrayGet($Camp_DB->config, $value, 1)) {
+          $regen="checked";
+          $noregen="";
+        } else {
+          $regen="";
+          $noregen="checked";
+        }
+        echo "<tr><td class=\"Label\">Next Support Key</td><td class=\"Data\">{$Camp_DB->config['supportkey']}</td></tr>";
+        echo "<tr><td class=\"Label\">Should the support key regenerate each time it's used?</td><td class=\"Data\">";
+        echo "<input type=\"radio\" name=\"support_regen\" value=\"1\" $regen> Yes ";
+        echo "<input type=\"radio\" name=\"support_regen\" value=\"0\" $noregen> No";
+        echo "</td></tr>";
+        break;
+      default:
+        echo "  <tr><td class=\"Label\">$data</td><td class=\"Data\"><input type=\"text\" name=\"$value\" size=\"25\" value=\"$valueStr\"></td></tr>";
     }
   }
   echo "<tr><td colspan=\"2\"><input type=\"submit\" value=\"Update Configuration\"></form>";
