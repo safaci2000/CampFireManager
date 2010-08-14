@@ -98,36 +98,60 @@ while(true) {
     $commands=explode(" ", $msg['text']);
     $command_data=array_slice($commands, 1);
 
-    switch(strtoupper(substr($msg['text'], 0, 2))) {
+    $Camp_DB->doDebug("Parsing commands: " . print_r($commands, TRUE), 2);
+
+    switch(strtoupper($commands[0])) {
       // I [Your Name] <Contact details in the format service:detail>
-      case "I ": // Identify
+      case "IDENTIFY":
+      case "ID":
+      case "I": // Identify
         $Camp_DB->updateIdentityInfo($command_data);
         break;
-      case "O ": // Pair a microblogging account or phone number with an OpenID account
+      case "OPENID":
+      case "OPEN":
+      case "AUTHENTICATE":
+      case "AUTHORIZE":
+      case "AUTHORISE":
+      case "AUTH":
+      case "O": // Pair a microblogging account or phone number with an OpenID account
         $Camp_DB->mergeContactDetails($commands[1]);
         break;
       // F [Time slot] [Length] [Title]
-      case "F ": // Propose a fixed slot talk
+      case "FIX":
+      case "F": // Propose a fixed slot talk
       // P [Time slot] [Length] [Title]
-      case "P ": // Propose a talk
+      case "PROPOSE":
+      case "P": // Propose a talk
         $Camp_DB->insertTalk($command_data);
         break;
       // C [TalkID] [Time Slot] <Reason>
-      case "C ": // Cancel a talk
+      case "CANCEL":
+      case "C": // Cancel a talk
         $Camp_DB->cancelTalk($command_data);
         break;
       // E [TalkID] [Time Slot] [New Title]
-      case "E ": // Edit a talk's title
+      case "EDIT":
+      case "E": // Edit a talk's title
         $Camp_DB->editTalk($commands);
         break;
       // A [TalkID]  // R [TalkID]
-      case "A ": // I will Attend a talk
-      case "R ": // Remove me from a talk
+      case "ATTEND":
+      case "GO":
+      case "A": // I will Attend a talk
+      case "REMOVE":
+      case "DECLINE":
+      case "STOP":
+      case "R": // Remove me from a talk
         for($i=0; $i<=count($commands)-1; $i++) {
           switch(strtoupper($commands[$i])) {
+            case "ATTEND":
+            case "GO":
             case "A":
               $Camp_DB->attendTalk($commands[$i+1]);
               break;
+            case "REMOVE":
+            case "DECLINE":
+            case "STOP":
             case "R":
               $Camp_DB->declineTalk($commands[$i+1]);
               break;
