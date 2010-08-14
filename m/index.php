@@ -45,7 +45,11 @@ switch(CampUtils::arrayGet($_REQUEST, 'state', '')) {
     $Camp_DB->updateIdentityInfo($data);
     break;
   case "Pr":
-    $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['length'], $_REQUEST['title']), 0);
+    if(1==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
+      $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['title']), 0);
+    } else {
+      $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['length'], $_REQUEST['title']), 0);
+    }
     break;
   case "Ca":
     $Camp_DB->cancelTalk(array($_REQUEST['talkid'], $Camp_DB->arrTalks[$_REQUEST['talkid']]['intTimeID'], $Camp_DB->escape(htmlentities($_REQUEST['reason']))));
@@ -148,9 +152,13 @@ if(isset($_SESSION['openid'])) {
     echo "<h2>Propose a talk</h2>";
       echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n<input type=\"hidden\" name=\"state\" value=\"Pr\">Starting talk at <select name=\"slot\">";
       foreach($Camp_DB->times as $intTimeID=>$arrTime) {if($intTimeID>$now) {echo "<option value=\"$intTimeID\">" . $Camp_DB->arrTimeEndPoints[$intTimeID]['s'] . "</option>";}}
-      echo "</select> and for <select name=\"length\">";
-      for($l=1; $l<=count($Camp_DB->times)-$now; $l++) {echo "<option value=\"$l\">$l</option>";}
-      echo "</select> slots about: <input type=\"text\" name=\"title\" /><input type=\"submit\" value=\"Go\" />";
+      echo "</select>";
+      if(0==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
+        echo " and for <select name=\"length\">";
+        for($l=1; $l<=count($Camp_DB->times)-$now; $l++) {echo "<option value=\"$l\">$l</option>";}
+        echo "</select> slots";
+      }
+      echo " about: <input type=\"text\" name=\"title\" /><input type=\"submit\" value=\"Go\" />";
   } elseif(isset($_GET['contact'])) {
     echo "<h2>Change my contact details</h2>";
     $details=$Camp_DB->getContactDetails(0, TRUE);

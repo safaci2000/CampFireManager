@@ -39,7 +39,9 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
                        'UTCOffset'=>'The UTC offset for the timezone, e.g. +00:00 for GMT or -08:00 for Pacific Standard Time.',
                        'timezone_name'=>'This is the name of your timezone (e.g. Europe/London)',
                        'AboutTheEvent'=>'Please provide some details about the content of your event.',
-                       'hashtag'=>"Optional: What do you want people (including this script) to use as the hashtag for today?, including the # sign itself.");
+                       'hashtag'=>"Optional: What do you want people (including this script) to use as the hashtag for today?, including the # sign itself.",
+                       'sessions_fixed_to_one_slot'=>"Do you want your sessions to be limited to only one slot, or can they use multiple?"
+    );
 
   if(isset($_POST['update_config'])) {
     foreach($config_fields as $field=>$strTime) {
@@ -104,30 +106,43 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
     switch($value) {
       case 'admin_regen':
         if(1==CampUtils::arrayGet($Camp_DB->config, $value, 1)) {
-          $regen="checked";
-          $noregen="";
+          $yes="checked";
+          $no="";
         } else {
-          $regen="";
-          $noregen="checked";
+          $yes="";
+          $no="checked";
         }
         echo "<tr><td class=\"Label\">Next Admin Key</td><td class=\"Data\">{$Camp_DB->config['adminkey']}</td></tr>";
         echo "<tr><td class=\"Label\">Should the admin key regenerate each time it's used?</td><td class=\"Data\">";
-        echo "<input type=\"radio\" name=\"admin_regen\" value=\"1\" $regen> Yes ";
-        echo "<input type=\"radio\" name=\"admin_regen\" value=\"0\" $noregen> No";
+        echo "<input type=\"radio\" name=\"admin_regen\" value=\"1\" $yes> Yes ";
+        echo "<input type=\"radio\" name=\"admin_regen\" value=\"0\" $no> No";
         echo "</td></tr>";
         break;
       case 'support_regen':
         if(1==CampUtils::arrayGet($Camp_DB->config, $value, 1)) {
-          $regen="checked";
-          $noregen="";
+          $yes="checked";
+          $no="";
         } else {
-          $regen="";
-          $noregen="checked";
+          $yes="";
+          $no="checked";
         }
         echo "<tr><td class=\"Label\">Next Support Key</td><td class=\"Data\">{$Camp_DB->config['supportkey']}</td></tr>";
         echo "<tr><td class=\"Label\">Should the support key regenerate each time it's used?</td><td class=\"Data\">";
-        echo "<input type=\"radio\" name=\"support_regen\" value=\"1\" $regen> Yes ";
-        echo "<input type=\"radio\" name=\"support_regen\" value=\"0\" $noregen> No";
+        echo "<input type=\"radio\" name=\"support_regen\" value=\"1\" $yes> Yes ";
+        echo "<input type=\"radio\" name=\"support_regen\" value=\"0\" $no> No";
+        echo "</td></tr>";
+        break;
+      case 'sessions_fixed_to_one_slot':
+        if(1==CampUtils::arrayGet($Camp_DB->config, $value, 0)) {
+          $yes="checked";
+          $no="";
+        } else {
+          $yes="";
+          $no="checked";
+        }
+        echo "<tr><td class=\"Label\">$data</td><td class=\"Data\">";
+        echo "<input type=\"radio\" name=\"$value\" value=\"1\" $yes> Yes ";
+        echo "<input type=\"radio\" name=\"$value\" value=\"0\" $no> No";
         echo "</td></tr>";
         break;
       default:

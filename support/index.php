@@ -125,7 +125,11 @@ if($Camp_DB->getSupport()==0 AND $Camp_DB->getAdmins()==0) {
       echo "\r\n<input type=\"submit\" name=\"update\" value=\"Go\"/></form>";
     } elseif(isset($_REQUEST['propose'])) {
       if(isset($_POST['update'])) {
-        $Camp_DB->insertTalk(array($_POST['slot'], $_POST['length'], $_POST['title']), 0);
+        if(1==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
+          $Camp_DB->insertTalk(array($_POST['slot'], $_POST['title']), 0);
+        } else {
+          $Camp_DB->insertTalk(array($_POST['slot'], $_POST['length'], $_POST['title']), 0);
+        }
         $Camp_DB->refresh();
       }
       echo "\r\n<form method=\"post\" action=\"$baseurl?propose\">\r\nPropose a new talk, starting at slot: <select name=\"slot\">";
@@ -134,10 +138,14 @@ if($Camp_DB->getSupport()==0 AND $Camp_DB->getAdmins()==0) {
           echo "<option value=\"$intTimeID\">{$Camp_DB->arrTimeEndPoints[$intTimeID]['s']}</option>";
         }
       }
-      echo "</select>\r\n and with a length of \r\n<select name=\"length\">";
-      $left=count($Camp_DB->times)-$now;
-      for($l=1; $l<=$left; $l++) {echo "<option value=\"$l\">$l</option>";}
-      echo "</select> \r\nslots. The talk will be about: \r\n<input type=\"text\" size=\"50\" name=\"title\" />\r\n<input type=\"submit\" name=\"update\" value=\"Go\"/></form>";
+      echo "</select>\r\n ";
+      if(0==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
+        echo "and with a length of \r\n<select name=\"length\">";
+        $left=count($Camp_DB->times)-$now;
+        for($l=1; $l<=$left; $l++) {echo "<option value=\"$l\">$l</option>";}
+        echo "</select> \r\nslots. ";
+      }
+      echo "The talk will be about: \r\n<input type=\"text\" size=\"50\" name=\"title\" />\r\n<input type=\"submit\" name=\"update\" value=\"Go\"/></form>";
     } elseif(isset($_GET['edit'])) {
       if(isset($_POST['update'])) {$Camp_DB->editTalk(array($_REQUEST['talkid'], $Camp_DB->arrTalks[$_REQUEST['talkid']]['intTimeID'], $Camp_DB->escape(htmlentities($_REQUEST['ntitle']) . ' ')));}
       echo "<h2>Edit Talk</h2><form method=\"post\" action=\"$baseurl\"><input type=\"hidden\" name=\"edit\">Retitle a talk with a talk ID of: <input type=\"text\" size=\"2\" name=\"talkid\" value=\"{$_GET['edit']}\"/>\r\n With the new title <input type=\"text\" size=\"50\" name=\"ntitle\" value=\"{$Camp_DB->arrTalks[$_GET['edit']]['strTalkTitle']}\" />\r\n<input type=\"submit\" name=\"update\" value=\"Go\"/></form>";

@@ -16,8 +16,17 @@ function renderHelp($class_pointer, $showWeb=FALSE, $marquee='') {
   $class_pointer->doDebug("renderHelp();");
   $display_commands="Identify with this service by sending 
 ".                  "<b>I &lt;your name&gt; [email:your@email.address] [http://your.web.site]</b>
-".                  "(there are more options for identification by going to the website)
-".                  "Propose a talk by sending <b>P &lt;Time Slot&gt; &lt;Slots Used&gt; &lt;Talk Title&gt;</b>
+".                  "(there are more options for identification by going to the website)";
+  if(0==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
+    $display_commands.="
+}
+".                  "Propose a talk by sending <b>P &lt;Time Slot&gt; &lt;Slots Used&gt; &lt;Talk Title&gt;</b>";
+  } else {
+    $display_commands.="
+}
+".                  "Propose a talk by sending <b>P &lt;Time Slot&gt; &lt;Talk Title&gt;</b>";
+  }
+  $display_commands.="
 ".                  "Cancel a talk by sending <b>C &lt;Talk Number&gt; &lt;Time Slot&gt; [Reason]</b>
 ".                  "Rename a talk by sending <b>E &lt;Talk Number&gt; &lt;Time Slot&gt; &lt;New Talk Title&gt;</b>
 ".                  "Attend a talk by sending <b>A &lt;Talk Number&gt;</b>

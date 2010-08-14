@@ -628,6 +628,8 @@ class Camp_DB extends GenericBaseClass {
   function insertTalk($commands, $boolFixed=0) {
     $this->doDebug("insertTalk(" . print_r($commands, TRUE) . ", $boolFixed);");
     $talk='';
+    $time=0;
+    $length=1;
     $stop=FALSE;
     $intTalkID=0;
     foreach($commands as $cid=>$command) {
@@ -636,8 +638,10 @@ class Camp_DB extends GenericBaseClass {
           if($command+0>0) {$time=$command;} else {$stop=TRUE;}
           break;
         case 1:
-          if($command+0>0) {$length=$command;} else {$stop=TRUE;}
-          break;
+          if(0==CampUtils::arrayGet($this->config, 'sessions_fixed_to_one_slot', 0)) {
+            if($command+0>0) {$length=$command;} else {$stop=TRUE;}
+            break;
+          }
         default:
           if($talk!='') {$talk.=" ";}
           $talk.=$command;
@@ -774,39 +778,31 @@ class Camp_DB extends GenericBaseClass {
     }
     list($this->arrTalkSlots, $this->arrTalks)=$this->readTalkData();
     foreach($this->arrTalks as $intTalkID=>$arrTalk) {
-      $this->doDebug("Looking at intTalkID of $intTalkID", 2);
       if(!is_null($this->arrTalks[$intTalkID])) {
         if($this->arrTalks[$intTalkID]['boolFixed']==TRUE) {
           $used_room[$this->arrTalks[$intTalkID]['intTimeID']][$this->arrTalks[$intTalkID]['intRoomID']]=$intTalkID;
           if($this->arrTalks[$intTalkID]['intLength']>1) {
-            $this->doDebug("intTalkID $intTalkID is a long fixed talk", 2);
             for($i=1; $i<$this->arrTalks[$intTalkID]['intLength']; $i++) {$used_room[$this->arrTalks[$intTalkID]['intTimeID']+$i][$this->arrTalks[$intTalkID]['intRoomID']]=$intTalkID;}
-          } else {
-            $this->doDebug("intTalkID $intTalkID is a fixed talk", 2);
           }
         } else {
           $arrUnfixedTalks[$this->arrTalks[$intTalkID]['intTimeID']][$intTalkID]=$this->arrTalks[$intTalkID]['intCount'];
           if($this->arrTalks[$intTalkID]['intLength']>1) {
-            $this->doDebug("intTalkID $intTalkID is also a long schedualable talk", 2);
             for($i=1; $i<$this->arrTalks[$intTalkID]['intLength']; $i++) {$arrLongTalks[$this->arrTalks[$intTalkID]['intTimeID']+$i][$intTalkID]=$intTalkID;}
-          } else {
-            $this->doDebug("intTalkID $intTalkID is scheduable talk", 2);
           }
         }
       }
     }
-    $this->doDebug("Initial results: " . print_r(array('arrTalks'=>$this->arrTalks, 'used_room'=>$used_room, 'arrUnfixedTalks'=>$arrUnfixedTalks, 'arrLongTalks'=>$arrLongTalks), TRUE) . "", 2);
     foreach($this->times as $intTimeID => $arrTime) {
       $strTime = $arrTime['strTime'];
       $intTimeType = $arrTime['intTimeType'];
-      if(count($arrLongTalks[$intTimeID])>0) {
+      if(isset($arrLongTalks[$intTimeID]) and count($arrLongTalks[$intTimeID])>0) {
         foreach($arrLongTalks[$intTimeID] as $intTalkID=>$null) {
           if($used_room[$intTimeID][$this->arrTalks[$intTalkID]['intRoomID']]==0) {
             $used_room[$intTimeID][$this->arrTalks[$intTalkID]['intRoomID']]=$intTalkID;
           }
         }
       }
-      if(count($arrUnfixedTalks[$intTimeID])>0) {
+      if(isset($arrUnfixedTalks[$intTimeID]) and count($arrUnfixedTalks[$intTimeID])>0) {
         unset($arrTalks);
         arsort($arrUnfixedTalks[$intTimeID]);
         foreach($arrUnfixedTalks[$intTimeID] as $intTalkID=>$null) {
@@ -816,7 +812,6 @@ class Camp_DB extends GenericBaseClass {
         foreach($this->rooms as $intRoomID=>$arrRoom) {
           $intTalkID=0;
           if(current($arrTalks)!==FALSE) {$intTalkID=current($arrTalks);}
-          $this->doDebug("In room $intRoomID at time $intTimeID the room state is " . $used_room[$intTimeID][$intRoomID] . " and the next room is $intTalkID", 2);
           if($used_room[$intTimeID][$intRoomID]==0 AND $intTalkID>0) {
             $used_room[$intTimeID][$intRoomID]=$intTalkID;
             $this->_setRoom($intRoomID, $intTalkID);
@@ -826,7 +821,6 @@ class Camp_DB extends GenericBaseClass {
         }
       }
     }
-    $this->doDebug("Final results: " . print_r(array('arrTalks'=>$this->arrTalks, 'arrTalkSlots'=>$this->arrTalkSlots), TRUE) . "");
   }
 
   function setSupportUser() {$_SESSION['support_user']=$this->intPersonID;}

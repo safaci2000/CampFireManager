@@ -161,14 +161,29 @@ if(!isset($_SESSION['openid'])) {
       $Camp_DB->updateIdentityInfo($data);
       break;
     case "P":
-      echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n<input type=\"hidden\" name=\"state\" value=\"Pr\">\r\nPropose a new talk, starting at slot: <input type=\"text\" size=\"2\" name=\"slot\" value=\"{$_GET['slot']}\" />\r\n and with a length of \r\n<select name=\"length\">";
-      if(isset($_GET['slot'])) {$left=count($Camp_DB->times)-($_GET['slot'])+1;} else {$left=count($Camp_DB->times);}
-      for($l=1; $l<=$left; $l++) {echo "<option value=\"$l\">$l</option>";}
-      echo "</select> \r\nslots. The talk will be about: \r\n<input type=\"text\" size=\"50\" name=\"title\" />\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
+      echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n<input type=\"hidden\" name=\"state\" value=\"Pr\">\r\nPropose a new talk, starting at <select name=\"slot\">";
+      foreach($Camp_DB->times as $intTimeID=>$strTime) {
+        if($intTimeID>$now) {
+          if($intTimeID==$_GET['slot']) {$selected='selected="selected"';} else {$selected='';}
+          echo "<option value=\"$intTimeID\" $selected>{$Camp_DB->arrTimeEndPoints[$intTimeID]['s']}</option>";
+        }
+      }
+      echo "</select>\r\n ";
+      if(0==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
+        echo "and with a length of \r\n<select name=\"length\">";
+        if(isset($_GET['slot'])) {$left=count($Camp_DB->times)-($_GET['slot'])+1;} else {$left=count($Camp_DB->times);}
+        for($l=1; $l<=$left; $l++) {echo "<option value=\"$l\">$l</option>";}
+        echo "</select> \r\nslots. ";
+      }
+      echo "The talk will be about: \r\n<input type=\"text\" size=\"50\" name=\"title\" />\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
       break;
     case "Pr":
       echo "<p class=\"RespondToAction\">Adding your talk</p>\r\n";
-      $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['length'], $_REQUEST['title']), 0);
+      if(1==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
+        $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['title']), 0);
+      } else {
+        $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['length'], $_REQUEST['title']), 0);
+      }
       break;
     case "C":
       echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n<input type=\"hidden\" name=\"state\" value=\"Ca\">\r\nCancel a talk with a talk ID of: <input type=\"text\" size=\"2\" name=\"talkid\" value=\"{$_GET['talkid']}\" />\r\n Because <input type=\"text\" size=\"50\" name=\"reason\" />\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
