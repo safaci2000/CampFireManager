@@ -79,10 +79,17 @@ while($run) {
 }
 
 function CreateTalk($number, $FreeSlots) {
+  global $Camp_DB;
   $msg='P ';
-  $msg.=$FreeSlots[rand(1, count($FreeSlots)-1)] . ' ';
-  $length_chance=rand(0,10);
-  if($length_chance>9) {$msg.='2 ';} else {$msg.='1 ';}
+  $msg.=$FreeSlots[rand(0, count($FreeSlots)-1)] . ' ';
+  if(0==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
+    $length_chance=rand(0,10);
+    if($length_chance>9) {
+      $msg.='2 ';
+    } else {
+      $msg.='1 ';
+    }
+  }
   $msg.=MakeRandomString();
   PhoneQueueInsert($msg, $number);
 }
