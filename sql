@@ -89,3 +89,10 @@ CREATE TABLE `times` (
   `intTimeType` int(1) NOT NULL,
   PRIMARY KEY (`intTimeID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `timetypes` (
+  `intTimeTypeID` int(11) NOT NULL AUTO_INCREMENT,
+  `strTimeType` varchar(255) NOT NULL,
+  PRIMARY KEY (`intTimeTypeID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8;
+
