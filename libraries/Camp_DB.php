@@ -209,6 +209,7 @@ class Camp_DB extends GenericBaseClass {
       $checkIsAdmin=$this->qryMap('intPersonID', 'boolIsAdmin', "{$this->prefix}people WHERE intPersonID='$intPersonID'");
       $checkIsSupport=$this->qryMap('intPersonID', 'boolIsSupport', "{$this->prefix}people WHERE intPersonID='$intPersonID'");
       $this->intPersonID=$intPersonID;
+      $this->_addChange(array('intPersonID'=>$this->intPersonID));
       $this->strName=$strName;
       $this->isAdmin=$checkIsAdmin[$intPersonID];
       $this->isSupport=$checkIsSupport[$intPersonID];
@@ -247,32 +248,47 @@ class Camp_DB extends GenericBaseClass {
     $this->refresh();
   }
 
-  protected function _createTalk($intTimeID, $intRoomID, $intPersonID, $strTalkTitle, $boolFixed, $intLength) {
-    $this->doDebug("_createTalk('$intTimeID', '$intRoomID', '$intPersonID', '$strTalkTitle', '$boolFixed', '$intLength');");
-    if($this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}talks (intTimeID, datTalk, intRoomID, intPersonID, strTalkTitle, boolFixed, intLength) VALUES ('$intTimeID', '{$this->today}', '$intRoomID', '$intPersonID', '$strTalkTitle', '$boolFixed', '$intLength')")) {
-      return $this->getInsertID();
+  protected function _createTalk($intTimeID, $intRoomID, $intPersonID, $strTalkTitle, $boolFixed, $intLength, $date='') {
+    if($date=='') {$date=$this->today;}
+    $this->doDebug("_createTalk('$intTimeID', '$intRoomID', '$intPersonID', '$strTalkTitle', '$boolFixed', '$intLength', '$date');");
+    if($this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}talks (intTimeID, datTalk, intRoomID, intPersonID, strTalkTitle, boolFixed, intLength) VALUES ('$intTimeID', '$date', '$intRoomID', '$intPersonID', '$strTalkTitle', '$boolFixed', '$intLength')")) {
+      $intTalkID=$this->getInsertID();
+      $this->_addChange(array('intTalkID'=>$intTalkID));
+      return($intTalkID);
     }
   }
 
   protected function _editTalk($intTalkID, $strTalkTitle) {
     $this->doDebug("_editTalk('$intTalkID', '$strTalkTitle');");
-    $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}talks SET strTalkTitle='$strTalkTitle' WHERE intTalkID='$intTalkID'");
+    if($strTalkTitle!=$this->arrTalks[$intTalkID]['strTalkTitle']) {
+      $this->_addChange(array('intTalkID'=>$intTalkID));
+      $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}talks SET strTalkTitle='$strTalkTitle' WHERE intTalkID='$intTalkID'");
+    }
   }
 
   protected function _deleteTalk($intTalkID) {
     $this->doDebug("_deleteTalk('$intTalkID');");
+    $this->_addChange(array('intTalkID'=>$intTalkID));
     $this->boolUpdateOrInsertSql("DELETE FROM {$this->prefix}talks WHERE intTalkID='$intTalkID'");
     $this->boolUpdateOrInsertSql("DELETE FROM {$this->prefix}attendees WHERE intTalkID='$intTalkID'");
   }
 
   protected function _attendTalk($intTalkID) {
     $this->doDebug("_attendTalk('$intTalkID');");
-    $this->boolUpdateOrInsertSql("REPLACE INTO {$this->prefix}attendees (intTalkID, intPersonID) VALUES ('$intTalkID', '{$this->intPersonID}')");
+    $isSet=$this->qryMap("intTalkID", "intPersonID", "{$this->prefix}attendees WHERE intTalkID='$intTalkID' and intPersonID='{$this->intPersonID}'");
+    if( ! (is_array($isSet) and count($isSet)>0)) {
+      $this->boolUpdateOrInsertSql("REPLACE INTO {$this->prefix}attendees (intTalkID, intPersonID) VALUES ('$intTalkID', '{$this->intPersonID}')");
+      $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}talks SET intAttendees = intAttendees + 1 WHERE intTalkID='$intTalkID'");
+      $this->_addChange(array('intTalkID'=>$intTalkID));
+    }
   }
 
   protected function _declineTalk($intTalkID) {
     $this->doDebug("_declineTalk('$intTalkID');");
-    $this->boolUpdateOrInsertSql("DELETE FROM {$this->prefix}attendees WHERE intTalkID='$intTalkID' AND intPersonID='{$this->intPersonID}'");
+    if($this->boolUpdateOrInsertSql("DELETE FROM {$this->prefix}attendees WHERE intTalkID='$intTalkID' AND intPersonID='{$this->intPersonID}'")) {
+      $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}talks SET intAttendees = intAttendees - 1 WHERE intTalkID='$intTalkID'");
+      $this->_addChange(array('intTalkID'=>$intTalkID));
+    }
   }
 
   function setConfig($key, $value) {
@@ -318,7 +334,6 @@ class Camp_DB extends GenericBaseClass {
 
 
   function updateRoom($intRoomID, $strRoom, $intCapacity) {
-    error_log('>>>>>>>>>>>>>>>>'. $intRoomID . '/'. $strRoom .'/'. $intCapacity);
     $this->doDebug("updateRoom($intRoomID, $strRoom, $intCapacity);");
     if(!isset($this->rooms[$intRoomID]) AND $strRoom!='' AND $intCapacity!='') {
       $this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}rooms (strRoom, intCapacity) VALUES ('$strRoom', '$intCapacity')");
@@ -393,7 +408,9 @@ class Camp_DB extends GenericBaseClass {
     }
   }
 
-  function updatePhoneData($strPhoneID, $intSignal) {$this->boolUpdateOrInsertSql("UPDATE {$this->prefix}account_phones SET intSignal='$intSignal' WHERE strGammuRef='$strPhoneID'");}
+  function updatePhoneData($strPhoneID, $intSignal) {
+    $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}account_phones SET intSignal='$intSignal' WHERE strGammuRef='$strPhoneID'");
+  }
 
   function getAllConnectionMethods() {
     $this->doDebug("getAllConnectionMethods();");
@@ -569,7 +586,7 @@ class Camp_DB extends GenericBaseClass {
     } else {
       list($talks, $talk_data)=$this->readTalkData();
 
-      if(($talk_data[$talkid]['intPersonID']==$this->intPersonID OR $this->isAdmin) and $talk_data[$talkid]['intTimeID']==$time and $time>=$next_time) {
+      if(($talk_data[$talkid]['intPersonID']==$this->intPersonID OR $this->isAdmin) and $talk_data[$talkid]['intTimeID']==$time and $time>=$this->next_time) {
         $this->_editTalk($talkid, $talk);
         $this->updateStatusScreen("{$this->strName} renamed the talk ($talkid) to '$talk'");
         return TRUE;
@@ -582,7 +599,25 @@ class Camp_DB extends GenericBaseClass {
 
   protected function _setRoom($intRoomID, $intTalkID) {
     $this->doDebug("_setRoom('$intRoomID', '$intTalkID');");
-    $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}talks SET intRoomID='$intRoomID' WHERE intTalkID='$intTalkID'");
+    if($this->arrTalks[$intTalkID]['intRoomID']!=$intRoomID) {
+      $this->_addChange(array('intTalkID'=>$intTalkID));
+      $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}talks SET intRoomID='$intRoomID' WHERE intTalkID='$intTalkID'");
+    }
+  }
+
+  function _addChange($arrChange=array()) {
+    $this->doDebug("_addChange(" . print_r($arrChange, TRUE) . ");");
+    if(is_array($arrChange) and count($arrChange)>0) {
+      foreach($arrChange as $key=>$value) {
+        switch($key) {
+          case 'intTalkID':
+          case 'intPersonID':
+            $this->boolUpdateOrInsertSql("REPLACE INTO {$this->prefix}changes ($key) VALUES ('$value')");
+            break;
+          default:
+        }
+      }
+    }
   }
 
   function createReply($message) {
@@ -625,8 +660,9 @@ class Camp_DB extends GenericBaseClass {
     }
   }
 
-  function insertTalk($commands, $boolFixed=0) {
-    $this->doDebug("insertTalk(" . print_r($commands, TRUE) . ", $boolFixed);");
+  function insertTalk($commands, $boolFixed=0, $date='') {
+    if($date=='') {$date=date('Y-m-d');}
+    $this->doDebug("insertTalk(" . print_r($commands, TRUE) . ", $boolFixed, $date);");
     $talk='';
     $time=0;
     $length=1;
@@ -666,7 +702,7 @@ class Camp_DB extends GenericBaseClass {
                 }
               }
               if($roomfree==1) {
-                $intTalkID=$this->_createTalk($time, $room, $this->intPersonID, $talk, $boolFixed, $length);
+                $intTalkID=$this->_createTalk($time, $room, $this->intPersonID, $talk, $boolFixed, $length, $date);
                 $this->updateStatusScreen("{$this->strName} proposed a talk about '$talk' into the slot {$this->times[$time]['strTime']}. It is talk number $intTalkID.");
                 $this->sortRooms();
                 return $intTalkID;
@@ -710,8 +746,9 @@ class Camp_DB extends GenericBaseClass {
     } else {
       list($talks, $talk_data)=$this->readTalkData();
 
-      if(($talk_data[$talkid]['intPersonID']==$this->intPersonID OR $this->isAdmin) and $talk_data[$talkid]['intTimeID']==$time and $time>=$this->next_time_time) {
+      if(($talk_data[$talkid]['intPersonID']==$this->intPersonID OR $this->isAdmin) and $talk_data[$talkid]['intTimeID']==$time and $time>=$this->next_time) {
         $this->_deleteTalk($talkid);
+        $strReason='';
         if($reason!='') {$strReason=" because: $reason";}
         $this->updateStatusScreen(trim("{$this->strName} cancelled their talk ($talkid) $strReason"));
         $this->sortRooms();
@@ -782,7 +819,9 @@ class Camp_DB extends GenericBaseClass {
         if($this->arrTalks[$intTalkID]['boolFixed']==TRUE) {
           $used_room[$this->arrTalks[$intTalkID]['intTimeID']][$this->arrTalks[$intTalkID]['intRoomID']]=$intTalkID;
           if($this->arrTalks[$intTalkID]['intLength']>1) {
-            for($i=1; $i<$this->arrTalks[$intTalkID]['intLength']; $i++) {$used_room[$this->arrTalks[$intTalkID]['intTimeID']+$i][$this->arrTalks[$intTalkID]['intRoomID']]=$intTalkID;}
+            for($i=1; $i<$this->arrTalks[$intTalkID]['intLength']; $i++) {
+              $used_room[$this->arrTalks[$intTalkID]['intTimeID']+$i][$this->arrTalks[$intTalkID]['intRoomID']]=$intTalkID;
+            }
           }
         } else {
           $arrUnfixedTalks[$this->arrTalks[$intTalkID]['intTimeID']][$intTalkID]=$this->arrTalks[$intTalkID]['intCount'];
@@ -880,7 +919,7 @@ class Camp_DB extends GenericBaseClass {
                 break;
             }
             if($return!='' AND $data!='') {$data.=' | ';}
-            $return.=$data;
+            if(isset($data)) {$return.=$data;}
           } else {
             switch($proto) {
               case "mailto":
@@ -954,7 +993,9 @@ class Camp_DB extends GenericBaseClass {
 
   protected function _updateIdentityInfo($contact_name, $contact_data) {
     $this->doDebug("_updateIdentityInfo('$contact_name, $contact_data')");
-    $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}people SET strName='" . $this->escape($contact_name) . "', strContactInfo='" . $this->escape($contact_data) . "' WHERE intPersonID='{$this->intPersonID}'");
+    if($this->boolUpdateOrInsertSql("UPDATE {$this->prefix}people SET strName='" . $this->escape($contact_name) . "', strContactInfo='" . $this->escape($contact_data) . "' WHERE intPersonID='{$this->intPersonID}'")) {
+      $this->_addChange(array('intPersonID'=>$this->intPersonID));
+    }
   }
 
   function fixRooms() {
@@ -966,7 +1007,7 @@ class Camp_DB extends GenericBaseClass {
 
   protected function _fixRooms($now_time) {
     $this->doDebug("_fixRooms()");
-    return $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}talks SET boolFixed=1 WHERE intTimeID<='$now_time'");
+    return $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}talks SET boolFixed=1, isChanged=1 WHERE intTimeID<='$now_time'");
   }
 
   protected function _setAdmin() {
@@ -1070,6 +1111,7 @@ class Camp_DB extends GenericBaseClass {
   }
 
   function getTimetableTemplate($includeCountData, $includeProposeLink) {
+    global $baseurl;
     // Set Defaults
     if(!isset($includeCountData)) {$includeCountData=TRUE;}
     if(!isset($includeProposeLink)) {$includeProposeLink=FALSE;}

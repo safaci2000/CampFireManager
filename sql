@@ -79,6 +79,7 @@ CREATE TABLE `talks` (
   `intPersonID` int(11) NOT NULL,
   `strTalkTitle` text NOT NULL,
   `boolFixed` tinyint(1) NOT NULL,
+  `intAttendees` int(11) NOT NULL,
   `intLength` tinyint(1) NOT NULL,
   PRIMARY KEY (`intTalkID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
