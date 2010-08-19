@@ -114,6 +114,16 @@ if(!isset($_SESSION['openid'])) {
   }
 } else {
   $Camp_DB->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>CampUtils::arrayGet($_SESSION, 'name', ''), 'OpenID_Mail'=>CampUtils::arrayGet($_SESSION, 'email', '')));
+  $details=$Camp_DB->getContactDetails(0, TRUE);
+  switch(CampUtils::arrayGet($_REQUEST, 'state', '')) {
+    case "I":
+    case "Id":
+      break;
+    default:
+    if('An OpenID User'==CampUtils::arrayGet($details, 'strName', 'An OpenID User') and '1'==CampUtils::arrayGet($Camp_DB->config, 'require_contact_details', 0)) {
+      header("Location: $baseurl?state=I");
+    }
+  }
   echo "<h1 class=\"headerbar\">$event_title</h1>\r\n";
   switch(CampUtils::arrayGet($_REQUEST, 'state', '')) {
     case "O":
