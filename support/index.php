@@ -13,7 +13,6 @@
 
 if(session_id()==='') {session_start();}
 if(isset($_SESSION['redirect'])) {unset($_SESSION['redirect']);}
-$base_dir="../libraries/";
 require_once("../db.php");
 require_once("{$base_dir}CampUtils.php");
 // Find the "Now" and "Next" time blocks

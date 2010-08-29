@@ -13,7 +13,6 @@
 
 if(session_id()==='') {session_start();}
 if(isset($_SESSION['openid']) and isset($_SESSION['redirect'])) {header("Location: " . $_SESSION['redirect']);}
-if(file_exists("libraries/GenericBaseClass.php")) {$base_dir='libraries/';} else {$base_dir='';}
 require_once("db.php");
 require_once("{$base_dir}common_functions-template.php");
 require_once("{$base_dir}common_xajax.php");
@@ -147,7 +146,7 @@ if(!isset($_SESSION['openid'])) {
       if(count($phones)>0 and count($omb)>0) {echo " or ";}
       if(count($omb)==1) {echo "$omb_accounts by direct message";}
       if(count($omb)>1) {echo "your preferred microblogging account (from $omb_accounts by) direct message";}
-      echo ":\r\nO " . $Camp_DB->getAuthCode() . "<br />\r\nAlternatively, please enter another Auth String into this box:<input type=\"text\" size=\"50\" name=\"AuthString\" />\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
+      echo ":\r\nO " . $Camp_DB->getAuthCode() . "<br />\r\nAlternatively, please enter another Auth String into this box:<input type=\"text\" size=\"25\" name=\"AuthString\" />\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
       break;
     case "Oa":
       echo "<p class=\"RespondToAction\">Adding an Authorization String to your account</p>\r\n";
@@ -171,7 +170,7 @@ if(!isset($_SESSION['openid'])) {
       $Camp_DB->updateIdentityInfo($data);
       break;
     case "P":
-      echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n<input type=\"hidden\" name=\"state\" value=\"Pr\">\r\nPropose a new talk, starting at <select name=\"slot\">";
+      echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n<input type=\"hidden\" name=\"state\" value=\"" . CampUtils::arrayGet($_REQUEST, 'state', '') . "r\">\r\nPropose a new talk, starting at <select name=\"slot\">";
       foreach($Camp_DB->times as $intTimeID=>$strTime) {
         if($intTimeID>$now) {
           if($intTimeID==$_GET['slot']) {$selected='selected="selected"';} else {$selected='';}
@@ -185,7 +184,36 @@ if(!isset($_SESSION['openid'])) {
         for($l=1; $l<=$left; $l++) {echo "<option value=\"$l\">$l</option>";}
         echo "</select> \r\nslots. ";
       }
-      echo "The talk will be about: \r\n<input type=\"text\" size=\"50\" name=\"title\" />\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
+      echo "The talk will be about: \r\n<input type=\"text\" size=\"25\" name=\"title\" />\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
+      break;
+    case "S":
+      echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n<input type=\"hidden\" name=\"state\" value=\"" . CampUtils::arrayGet($_REQUEST, 'state', '') . "r\">\r\nPropose a new talk, starting at <select name=\"slot\">";
+      foreach($Camp_DB->times as $intTimeID=>$strTime) {
+        if($intTimeID>$now) {
+          if($intTimeID==$_GET['slot']) {$selected='selected="selected"';} else {$selected='';}
+          echo "<option value=\"$intTimeID\" $selected>{$Camp_DB->arrTimeEndPoints[$intTimeID]['s']}</option>";
+        }
+      }
+      echo "</select>\r\n ";
+      if(0==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
+        echo "and with a length of \r\n<select name=\"length\">";
+        if(isset($_GET['slot'])) {$left=count($Camp_DB->times)-($_GET['slot'])+1;} else {$left=count($Camp_DB->times);}
+        for($l=1; $l<=$left; $l++) {echo "<option value=\"$l\">$l</option>";}
+        echo "</select> \r\nslots. ";
+      }
+      echo "The talk will be";
+      if(1==CampUtils::arrayGet($Camp_DB->config, 'dynamically_sort_whole_board_by_attendees', 0) or ("S"==CampUtils::arrayGet($_REQUEST, 'state', '') and !is_null(CampUtils::arrayGet($_REQUEST, 'room', null)))) {
+        echo " in the non-dynamically allocated room \r\n<select name=\"room\">";
+        foreach($Camp_DB->rooms as $intRoomID=>$arrRoom) {
+          if(0==$arrRoom['boolIsDynamic'] or 0==CampUtils::arrayGet($Camp_DB->config, 'dynamically_sort_whole_board_by_attendees', 1)) {
+            if($intRoomID==CampUtils::arrayGet($_REQUEST, 'room', '')) {$thisone='selected="selected"';} else {$thisone='';}
+            echo "<option value=\"$intRoomID\" $thisone>{$arrRoom['strRoom']}</option>";
+          }
+        }
+        echo "</select> \r\nand will be";
+      }
+
+      echo " about: \r\n<input type=\"text\" size=\"25\" name=\"title\" />\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
       break;
     case "Pr":
       echo "<p class=\"RespondToAction\">Adding your talk</p>\r\n";
@@ -195,15 +223,23 @@ if(!isset($_SESSION['openid'])) {
         $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['length'], $_REQUEST['title']), 0);
       }
       break;
+    case "Sr":
+      echo "<p class=\"RespondToAction\">Adding your talk</p>\r\n";
+      if(1==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
+        $Camp_DB->insertStaticTalk($_REQUEST['slot'], $_REQUEST['room'], $_REQUEST['title']);
+      } else {
+        $Camp_DB->insertStaticTalk($_REQUEST['slot'], $_REQUEST['room'], $_REQUEST['title'], $_REQUEST['length']);
+      }
+      break;
     case "C":
-      echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n<input type=\"hidden\" name=\"state\" value=\"Ca\">\r\nCancel a talk with a talk ID of: <input type=\"text\" size=\"2\" name=\"talkid\" value=\"{$_GET['talkid']}\" />\r\n Because <input type=\"text\" size=\"50\" name=\"reason\" />\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
+      echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n<input type=\"hidden\" name=\"state\" value=\"Ca\">\r\nCancel a talk with a talk ID of: <input type=\"text\" size=\"2\" name=\"talkid\" value=\"{$_GET['talkid']}\" />\r\n Because <input type=\"text\" size=\"25\" name=\"reason\" />\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
       break;
     case "Ca":
       echo "<p class=\"RespondToAction\">Cancelling your talk ({$_REQUEST['talkid']})</p>\r\n";
       $Camp_DB->cancelTalk(array($_REQUEST['talkid'], $Camp_DB->arrTalks[$_REQUEST['talkid']]['intTimeID'], $Camp_DB->escape(htmlentities($_REQUEST['reason']))));
       break;
     case "E":
-      echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n<input type=\"hidden\" name=\"state\" value=\"Ed\">\r\nRetitle a talk with a talk ID of: <input type=\"text\" size=\"2\" name=\"talkid\" value=\"{$_GET['talkid']}\" />\r\n With the new title <input type=\"text\" size=\"50\" name=\"ntitle\" />\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
+      echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n<input type=\"hidden\" name=\"state\" value=\"Ed\">\r\nRetitle a talk with a talk ID of: <input type=\"text\" size=\"2\" name=\"talkid\" value=\"{$_GET['talkid']}\" />\r\n With the new title <input type=\"text\" size=\"25\" name=\"ntitle\" />\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
       break;
     case "Ed":
       echo "<p class=\"RespondToAction\">Retitling your talk ({$_REQUEST['talkid']})</p>\r\n";

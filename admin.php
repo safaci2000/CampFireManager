@@ -14,6 +14,9 @@
 if(session_id()==='') {session_start();}
 if(isset($_SESSION['redirect'])) {unset($_SESSION['redirect']);}
 require_once("db.php");
+
+echo "<!-- " . print_r($_REQUEST, TRUE) . " -->\r\n";
+
 if(!isset($Camp_DB->config['adminkey'])) {$Camp_DB->generateNewAdminKey();}
 if(!isset($Camp_DB->config['supportkey'])) {$Camp_DB->generateNewSupportKey();}
 // You're only allowed here if you've already logged in
@@ -40,7 +43,8 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
                        'timezone_name'=>'This is the name of your timezone (e.g. Europe/London)',
                        'AboutTheEvent'=>'Please provide some details about the content of your event.',
                        'hashtag'=>"Optional: What do you want people (including this script) to use as the hashtag for today?, including the # sign itself.",
-                       'sessions_fixed_to_one_slot'=>"Do you want your sessions to be limited to only one slot, or can they use multiple?",
+                       'sessions_fixed_to_one_slot'=>"Do you want your sessions to be limited to only one slot?",
+                       'dynamically_sort_whole_board_by_attendees'=>'',
                        'require_contact_details'=>''
     );
 
@@ -69,10 +73,10 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
   }
   if(isset($_POST['update_rooms'])) {
     foreach($Camp_DB->rooms as $value=>$strTime) {
-      $Camp_DB->updateRoom($value, $_POST['room_' . $value], $_POST['capacity_' . $value]);
+      $Camp_DB->updateRoom($value, $_POST['room_' . $value], $_POST['capacity_' . $value], $_POST['dynamic_' . $value]);
     }
     if($_POST['room_new']!='' AND $_POST['capacity_new']!='') {
-      $Camp_DB->updateRoom('', $_POST['room_new'], $_POST['capacity_new']);
+      $Camp_DB->updateRoom('', $_POST['room_new'], $_POST['capacity_new'], $_POST['dynamic_new']);
     }
   }
   if(!isset($Camp_DB->config['adminkey'])) {$Camp_DB->generateNewAdminKey();}
@@ -134,7 +138,7 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
         echo "</td></tr>";
         break;
       case 'require_contact_details':
-        if(1==CampUtils::arrayGet($Camp_DB->config, $value, 0)) {
+        if(1==CampUtils::arrayGet($Camp_DB->config, $value, 1)) {
           $yes="checked";
           $no="";
         } else {
@@ -142,6 +146,19 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
           $no="checked";
         }
         echo "<tr><td class=\"Label\">Will we require OpenID Users to rename themselves from 'An OpenID User'?</td><td class=\"Data\">";
+        echo "<input type=\"radio\" name=\"$value\" value=\"1\" $yes> Yes ";
+        echo "<input type=\"radio\" name=\"$value\" value=\"0\" $no> No";
+        echo "</td></tr>";
+        break;
+      case 'dynamically_sort_whole_board_by_attendees':
+        if(1==CampUtils::arrayGet($Camp_DB->config, $value, 1)) {
+          $yes="checked";
+          $no="";
+        } else {
+          $yes="";
+          $no="checked";
+        }
+        echo "<tr><td class=\"Label\">Will all the rooms auto-sort talks into slots based on the number of attendees?</td><td class=\"Data\">";
         echo "<input type=\"radio\" name=\"$value\" value=\"1\" $yes> Yes ";
         echo "<input type=\"radio\" name=\"$value\" value=\"0\" $no> No";
         echo "</td></tr>";
@@ -245,18 +262,38 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
 <input type=\"hidden\" name=\"update_rooms\" value=\"TRUE\">
 <table>
   <tr><th colspan=\"3\">Room Options (please sort these manually by capacity)</th></tr>
-  <tr><th>Room ID</th><th>Name</th><th>Capacity</th></tr>";
-  foreach($Camp_DB->rooms as $roomid=>$room) {echo "
+  <tr><th>Room ID</th><th>Name</th><th>Capacity</th><th>Dynamic Sorting</th></tr>";
+  foreach($Camp_DB->rooms as $roomid=>$room) {
+    if('1'==CampUtils::arrayGet($room, 'boolIsDynamic', '1')) {
+      $no="";
+      $yes="selected";
+    } else {
+      $no="selected";
+      $yes="";
+    }
+    echo "
   <tr>
     <td class=\"Label\">Room $roomid</td>
     <td class=\"Data\"><input type=\"text\" name=\"room_$roomid\" size=\"25\" value=\"{$room['strRoom']}\"></td>
     <td class=\"Data\"><input type=\"text\" name=\"capacity_$roomid\" size=\"4\" value=\"{$room['intCapacity']}\"></td>
+    <td class=\"Data\">
+      <select name=\"dynamic_$roomid\">
+        <option value=\"1\" $yes>Yes</option>
+        <option value=\"0\" $no>No</option>
+      </select>
+    </td>
   </tr>";}
   echo "
   <tr>
     <td class=\"Label\">New Room</td>
     <td class=\"Data\"><a name=\"room\"><input type=\"text\" name=\"room_new\" size=\"25\" value=\"\"></td>
     <td class=\"Data\"><input type=\"text\" name=\"capacity_new\" size=\"4\" value=\"\"></td>
+    <td class=\"Data\">
+      <select name=\"dynamic_new\">
+        <option value=\"1\" selected>Yes</option>
+        <option value=\"0\">No</option>
+      </select>
+    </td>
   </tr>";
   echo "<tr><td colspan=\"3\"><input type=\"submit\" value=\"Update Configuration\">";
   echo "</table></form></td></tr>";

@@ -110,6 +110,22 @@ class Camp_DB extends GenericBaseClass {
     }
   }
 
+  function doApiAuth($user, $pass) {
+    $this->doDebug("doApiAuth($user, $pass)");
+    $where="strAgent='" . $this->escape($user) . "'";
+    $agents=$this->qryMap('strAgent', 'isEnabled', "{$this->prefix}agent WHERE $where");
+    if(is_array($agents) and count($agents)>0) {
+      foreach($agents as $agent) {
+        if($agent['isEnabled']=='0') {
+          return FALSE;
+        }
+      }
+    } else {
+      // Create a new agent entry
+    }
+    return $this->getMe(array('strAuthString'=>$pass));
+  }
+
   function getMe($me=array(), $strSourceID='') {
     $set = '';
     $this->doDebug("getMe(" . print_r($me, TRUE) . ", $strSourceID);");
@@ -134,7 +150,7 @@ class Camp_DB extends GenericBaseClass {
         $where.=" OR strAuthString='{$commands[1]}'";
       }
     } else {$me['number']='';}
-    
+
     // Check for a Microblog Account
     if(isset($me['microblog_account'])) {
       $me['microblog_account']=$this->escape($me['microblog_account']);
@@ -333,20 +349,25 @@ class Camp_DB extends GenericBaseClass {
   }
 
 
-  function updateRoom($intRoomID, $strRoom, $intCapacity) {
-    $this->doDebug("updateRoom($intRoomID, $strRoom, $intCapacity);");
+  function updateRoom($intRoomID, $strRoom, $intCapacity, $boolIsDynamic) {
+    $this->setDebug(255);
+    $this->doDebug("updateRoom($intRoomID, $strRoom, $intCapacity, $boolIsDynamic) from " . print_r($this->rooms[$intRoomID], TRUE) . ";");
     if(!isset($this->rooms[$intRoomID]) AND $strRoom!='' AND $intCapacity!='') {
-      $this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}rooms (strRoom, intCapacity) VALUES ('$strRoom', '$intCapacity')");
+      $this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}rooms (strRoom, intCapacity, boolIsDynamic) VALUES ('$strRoom', '$intCapacity', '$boolIsDynamic')");
     }
-    if($this->rooms[$intRoomID]['strRoom']!=$strRoom AND $strRoom!='' AND $this->rooms[$intRoomID]['intRoomID']!=$intCapacity AND $intCapacity!='') {
-      $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}rooms SET strRoom='$strRoom', intCapacity='$intCapacity' WHERE intRoomID='$intRoomID'");
+    if(($this->rooms[$intRoomID]['strRoom']!=$strRoom AND $strRoom!='') or 
+       ($this->rooms[$intRoomID]['intCapacity']!=$intCapacity AND $intCapacity!='') or 
+       ($this->rooms[$intRoomID]['boolIsDynamic']!=$boolIsDynamic)
+      ) {
+      $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}rooms SET strRoom='$strRoom', intCapacity='$intCapacity', boolIsDynamic='$boolIsDynamic' WHERE intRoomID='$intRoomID'");
     }
     if(($this->rooms[$intRoomID]['strRoom']!=$strRoom AND $strRoom=='') OR ($this->rooms[$intRoomID]['intRoomID']!=$intCapacity AND $intCapacity=='')) {
       $this->boolUpdateOrInsertSql("TRUNCATE {$this->prefix}rooms");
       foreach($this->rooms as $old_intRoomID=>$arrRoom) {
-        if($old_intRoomID!=$intRoomID) {$this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}rooms (strRoom, intCapacity) VALUES ('" . $arrRoom['strRoom'] . "', '" . $arrRoom['intCapacity'] . "')");}
+        if($old_intRoomID!=$intRoomID) {$this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}rooms (strRoom, intCapacity, boolIsDynamic) VALUES ('" . $arrRoom['strRoom'] . "', '" . $arrRoom['intCapacity'] . "', '" . $arrRoom['boolIsDynamic'] . "')");}
       }
     }
+    $this->setDebug(0);
   }
 
   function updateMb($intMbID, $strApi, $strUser, $strPass) {
@@ -495,7 +516,25 @@ class Camp_DB extends GenericBaseClass {
   function getTalks() {
     $this->doDebug("getTalks();");
     if($this->today!='') {$w="WHERE datTalk='{$this->today}'";} else {$w='';}
-    return $this->qryArray("SELECT * FROM {$this->prefix}talks $w", "intTalkID");
+    $whole_result=$this->qryArray("SELECT * FROM {$this->prefix}talks $w", "intTalkID");
+    $return=array();
+    foreach($whole_result as $row_id=>$row_data) {
+      foreach($row_data as $column_name=>$column_data) {
+        switch($column_name) {
+          case "intTalkID":
+          case "intTimeID":
+          case "datTalk":
+          case "intRoomID":
+          case "intPersonID":
+          case "strTalkTitle":
+          case "boolFixed":
+          case "intAttendees":
+          case "intLength":
+            $return[$row_id][$column_name]=$column_data;
+        }
+      }
+    }
+    return $return;
   }
 
   function getAttendeesCount() {
@@ -531,7 +570,7 @@ class Camp_DB extends GenericBaseClass {
 
   function getScreens() {
     $this->doDebug("getScreens();");
-    if(!isset($this->strHostname)) {$this->strHostname=$this->escape(trim(`hostname`));}
+    if(!isset($this->strHostname)) {$this->strHostname=$this->escape(trim($_SERVER['REMOTE_ADDR']));}
     $screens=$this->qryMap('strHostname', 'intScreenID', "{$this->prefix}screens WHERE strHostname='{$this->strHostname}'");
     if(isset($screens[$this->strHostname])) {
       $intScreenID=$screens[$this->strHostname];
@@ -604,6 +643,25 @@ class Camp_DB extends GenericBaseClass {
       $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}talks SET intRoomID='$intRoomID' WHERE intTalkID='$intTalkID'");
     }
   }
+  function getChanges($reset=TRUE) {
+    $this->doDebug("getChanges($reset)");
+    $tdata=$this->qryMap("intChangeID", "intTalkID", "{$this->prefix}changes WHERE intTalkID!='0'");
+    $pdata=$this->qryMap("intChangeID", "intPersonID", "{$this->prefix}changes WHERE intPersonID!='0'");
+    if($reset==TRUE) {
+      if(is_array($tdata) and count($tdata)>0) {
+        foreach($tdata as $key=>$value) {
+          $this->boolUpdateOrInsertSql("DELETE FROM {$this->prefix}changes WHERE intChangeID='$key'");
+        }
+      }
+      if(is_array(ptdata) and count($pdata)>0) {
+        foreach($pdata as $key=>$value) {
+          $this->boolUpdateOrInsertSql("DELETE FROM {$this->prefix}changes WHERE intChangeID='$key'");
+        }
+      }
+    }
+    return(array('talks'=>$tdata, 'people'=>$pdata));
+  }
+
 
   function _addChange($arrChange=array()) {
     $this->doDebug("_addChange(" . print_r($arrChange, TRUE) . ");");
@@ -612,7 +670,10 @@ class Camp_DB extends GenericBaseClass {
         switch($key) {
           case 'intTalkID':
           case 'intPersonID':
-            $this->boolUpdateOrInsertSql("REPLACE INTO {$this->prefix}changes ($key) VALUES ('$value')");
+            $data=$this->qryMap($key, $value, "{$this->prefix}changes where $key='$value'");
+            if(!is_array($data) or count($data)==0) {
+              $this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}changes ($key) VALUES ('$value')");
+            }
             break;
           default:
         }
@@ -660,6 +721,46 @@ class Camp_DB extends GenericBaseClass {
     }
   }
 
+  function insertStaticTalk($time, $room, $talk, $length=1, $date='') {
+    if($date=='') {$date=date('Y-m-d');}
+    $this->doDebug("insertStaticTalk($time, $room, $talk, $length, $date);");
+    $talk=$this->escape($talk);
+    $stop=TRUE;
+    if(isset($this->rooms[$room]) and (0==$this->rooms[$room]['boolIsDynamic'] or 1==CampUtils::arrayGet($this->config, 'dynamically_sort_whole_board_by_attendees', "0"))) {$stop=FALSE;}
+    $intTalkID=0;
+    list($this->arrTalkSlots, $this->arrTalks)=$this->readTalkData();
+    if($time<=$this->now_time) {$time=$this->now_time+1;}
+    while($intTalkID==0 AND $stop==FALSE) {
+      if(count($this->arrTalkSlots[$time])>0) {
+        foreach($this->arrTalkSlots[$time] as $intRoomID=>$intTalkNumber) {
+          if($intTalkNumber<=0 and $intRoomID==$room) { // You can't assign a talk in a pre-existing slot
+            $roomfree=1;
+            if($length>1 and ($time-1)+$length>count($this->times)) {
+              for($i=$time+1; $i<=($time-1)+$length; $i++) {
+                if($talks[$i][$intRoomID]>0) {$roomfree=0;} // A talk has already been assigned to this room in this slot.
+              }
+            }
+            if($roomfree==1) {
+              $intTalkID=$this->_createTalk($time, $room, $this->intPersonID, $talk, 1, $length, $date);
+              $this->updateStatusScreen("{$this->strName} proposed a talk about '$talk' into the slot {$this->times[$time]['strTime']}. It is talk number $intTalkID.");
+              $this->sortRooms();
+              return $intTalkID;
+            }
+          }
+        }
+      }
+      if($intTalkID==0) {
+        $time++;
+        if($this->times[$time]['intTimeType']!=0) {$time++;} // An automatic allocation shouldn't push your talk into lunch. You must only select it.
+        if($time>count($this->times)) {$stop=TRUE;}
+      }
+    }
+    if($stop!=FALSE) {
+      $this->updateStatusScreen("{$this->strName} was unable to propose a talk because there were no more available slots. (Received " . print_r($commands, TRUE) . ")");
+      return FALSE;
+    } 
+  }
+
   function insertTalk($commands, $boolFixed=0, $date='') {
     if($date=='') {$date=date('Y-m-d');}
     $this->doDebug("insertTalk(" . print_r($commands, TRUE) . ", $boolFixed, $date);");
@@ -694,7 +795,7 @@ class Camp_DB extends GenericBaseClass {
       while($intTalkID==0 AND $stop==FALSE) {
         if(count($this->arrTalkSlots[$time])>0) {
           foreach($this->arrTalkSlots[$time] as $room=>$intTalkNumber) {
-            if($intTalkNumber<=0) { // You can't assign a talk in a pre-existing slot
+            if($intTalkNumber<=0 and $this->rooms[$room]['boolIsDynamic']==1) { // You can't assign a talk in a pre-existing slot
               $roomfree=1;
               if($length>1 and ($time-1)+$length>count($this->times)) {
                 for($i=$time+1; $i<=($time-1)+$length; $i++) {
@@ -776,31 +877,35 @@ class Camp_DB extends GenericBaseClass {
       }
     }
 
-    foreach($arrTalks as $intTalkID=>$arrTalk) {
-      $arrTalks[$intTalkID]['strTalkTitle']=stripslashes($arrTalk['strTalkTitle']);
-      if(isset($arrAttendanceByTalks[$intTalkID])) {
-        $arrTalks[$intTalkID]['intCount']=$arrAttendanceByTalks[$intTalkID];
-      } else {
-        $arrTalks[$intTalkID]['intCount']=0;
+    if(is_array($arrTalks) and count($arrTalks)>0) {
+      foreach($arrTalks as $intTalkID=>$arrTalk) {
+        $arrTalks[$intTalkID]['strTalkTitle']=stripslashes($arrTalk['strTalkTitle']);
+        if(isset($arrAttendanceByTalks[$intTalkID])) {
+          $arrTalks[$intTalkID]['intCount']=$arrAttendanceByTalks[$intTalkID];
+        } else {
+          $arrTalks[$intTalkID]['intCount']=0;
+        }
+        $arrTalks[$intTalkID]['strPresenter']=$arrPeopleAsPresentersOnly[$arrTalks[$intTalkID]['intPersonID']]['strName'];
+        $arrTalks[$intTalkID]['strContactInfo']=$arrPeopleAsPresentersOnly[$arrTalks[$intTalkID]['intPersonID']]['strContactInfo'];
+        $arrTalks[$intTalkID]['xsdStart']=$arrTalks[$intTalkID]['datTalk'] . 'T' . $this->arrTimeEndPoints[$arrTalks[$intTalkID]['intTimeID']]['s'] . $this->config['UTCOffset'];
+        $arrTalks[$intTalkID]['xsdEnd']=$arrTalks[$intTalkID]['datTalk'] . 'T' . $this->arrTimeEndPoints[$arrTalks[$intTalkID]['intTimeID'] + ($arrTalks[$intTalkID]['intLength'] - 1)]['e'] . $this->config['UTCOffset'];
+        $arrTalkSlots[$arrTalk['intTimeID']][$arrTalk['intRoomID']]=$intTalkID;
       }
-      $arrTalks[$intTalkID]['strPresenter']=$arrPeopleAsPresentersOnly[$arrTalks[$intTalkID]['intPersonID']]['strName'];
-      $arrTalks[$intTalkID]['strContactInfo']=$arrPeopleAsPresentersOnly[$arrTalks[$intTalkID]['intPersonID']]['strContactInfo'];
-      $arrTalks[$intTalkID]['xsdStart']=$arrTalks[$intTalkID]['datTalk'] . 'T' . $this->arrTimeEndPoints[$arrTalks[$intTalkID]['intTimeID']]['s'] . $this->config['UTCOffset'];
-      $arrTalks[$intTalkID]['xsdEnd']=$arrTalks[$intTalkID]['datTalk'] . 'T' . $this->arrTimeEndPoints[$arrTalks[$intTalkID]['intTimeID'] + ($arrTalks[$intTalkID]['intLength'] - 1)]['e'] . $this->config['UTCOffset'];
-      $arrTalkSlots[$arrTalk['intTimeID']][$arrTalk['intRoomID']]=$intTalkID;
-    }
-    foreach($arrTalks as $intTalkID=>$arrTalk) {
-      if($arrTalk['intLength']>1) {
-        for($i=1; $i<=$arrTalk['intLength']-1; $i++) {
-          if($arrTalkSlots[$arrTalk['intTimeID']+$i][$arrTalk['intRoomID']]>0) {
-            $newRoom=0;
-            $arrTalkSlots[$arrTalk['intTimeID']+$i][$newRoom]=$arrTalkSlots[$arrTalk['intTimeID']+$i][$arrTalk['intRoomID']];
-            $arrTalkSlots[$arrTalk['intTimeID']+$i][$arrTalk['intRoomID']]=$intTalkID;
-          } else {
-            $arrTalkSlots[$arrTalk['intTimeID']+$i][$arrTalk['intRoomID']]=$intTalkID;
+      foreach($arrTalks as $intTalkID=>$arrTalk) {
+        if($arrTalk['intLength']>1) {
+          for($i=1; $i<=$arrTalk['intLength']-1; $i++) {
+            if($arrTalkSlots[$arrTalk['intTimeID']+$i][$arrTalk['intRoomID']]>0) {
+              $newRoom=0;
+              $arrTalkSlots[$arrTalk['intTimeID']+$i][$newRoom]=$arrTalkSlots[$arrTalk['intTimeID']+$i][$arrTalk['intRoomID']];
+              $arrTalkSlots[$arrTalk['intTimeID']+$i][$arrTalk['intRoomID']]=$intTalkID;
+            } else {
+              $arrTalkSlots[$arrTalk['intTimeID']+$i][$arrTalk['intRoomID']]=$intTalkID;
+            }
           }
         }
       }
+    } else {
+      $arrTalks=array();
     }
     return array($arrTalkSlots, $arrTalks);
   }
@@ -816,7 +921,7 @@ class Camp_DB extends GenericBaseClass {
     list($this->arrTalkSlots, $this->arrTalks)=$this->readTalkData();
     foreach($this->arrTalks as $intTalkID=>$arrTalk) {
       if(!is_null($this->arrTalks[$intTalkID])) {
-        if($this->arrTalks[$intTalkID]['boolFixed']==TRUE) {
+        if($this->arrTalks[$intTalkID]['boolFixed']==TRUE or $this->rooms[$this->arrTalks[$intTalkID]['intRoomID']]['boolIsDynamic']==FALSE) {
           $used_room[$this->arrTalks[$intTalkID]['intTimeID']][$this->arrTalks[$intTalkID]['intRoomID']]=$intTalkID;
           if($this->arrTalks[$intTalkID]['intLength']>1) {
             for($i=1; $i<$this->arrTalks[$intTalkID]['intLength']; $i++) {
@@ -1127,7 +1232,18 @@ class Camp_DB extends GenericBaseClass {
     $attend_talks=$this->getTalksIAmAttending();
     $mainbody = '';
     if(count($this->rooms)>0) {
-      $mainbody .="<table class=\"WholeDay\">\r\n";
+      $boolHasNonDynamicRooms = FALSE;
+      $numNonDynamicRooms = 0;
+      $boolAllNonDynamicRooms = FALSE;
+      foreach($this->rooms as $intRoomID => $arrRoom) {
+        if($arrRoom['boolIsDynamic']=='0') {
+          $numNonDynamicRooms++;
+          $boolHasNonDynamicRooms = TRUE;
+        }
+      }
+      if(count($this->rooms)==$numNonDynamicRooms OR $this->config['dynamically_sort_whole_board_by_attendees']==0) {$boolAllNonDynamicRooms = TRUE;}
+
+      $mainbody.="<table class=\"WholeDay\">\r\n";
       $mainbody.="  <thead>\r\n";
       $mainbody.="    <tr class=\"Time_title\">\r\n";
       foreach($this->times as $intTimeID => $arrTime) {
@@ -1135,7 +1251,9 @@ class Camp_DB extends GenericBaseClass {
         $intTimeType = $arrTime['intTimeType'];
         if($intTimeID==$this->now_time) {$strTime.="<br />(On Now)";} elseif ($intTimeID==$this->next_time) {$strTime.="<br />(Next)";}  
         $mainbody.="      <th class=\"Time_title\">Slot $intTimeID<br />$strTime";
-        if($intTimeID>$this->now_time && $includeProposeLink==TRUE) {$mainbody.="<br /><a href=\"?state=P&slot=$intTimeID\">New Talk</a>";}
+        if($intTimeID>$this->now_time and $includeProposeLink==TRUE and $boolAllNonDynamicRooms==FALSE) {
+          $mainbody.="<br /><a href=\"?state=P&slot=$intTimeID\">New Talk</a>";
+        }
         $mainbody.="</th>\r\n";
       }
       $mainbody.="    </tr>\r\n";
@@ -1154,6 +1272,15 @@ class Camp_DB extends GenericBaseClass {
               $mainbody.=$this->timetypes[-$this->arrTalkSlots[$intTimeID][$intRoomID]];
             } else {
               $mainbody.="Empty";
+            }
+            if(isset($this->intPersonID) and ($intTimeID > $this->now_time) ) {
+              if($arrRoom['boolIsDynamic']=='0' or $this->config['dynamically_sort_whole_board_by_attendees']==0) {
+                $mainbody.="<div class=\"label\"><a href=\"?state=S&slot=$intTimeID&room=$intRoomID\">New Talk</a></div>";
+              } else {
+                if($boolHasNonDynamicRooms==TRUE) {
+                  $mainbody.="<div class=\"label\">New talks will be dynamically sorted</div>";
+                }
+              }
             }
             $mainbody.="</td></tr></table></td>";
           } elseif($this->arrTalks[$this->arrTalkSlots[$intTimeID][$intRoomID]]['intTimeID']!=$intTimeID) {

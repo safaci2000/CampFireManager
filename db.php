@@ -28,16 +28,9 @@ $db_Phone=array(
   "base"=>"gammu"
 );
 
-//Load class files
-if(!isset($base_dir)) {
-  if(file_exists("libraries/GenericBaseClass.php")) {
-    $base_dir='libraries/';
-  } else {
-    $base_dir='';
-  }
-}
+$base_dir=dirname(__FILE__) . "/libraries/";
 
-require_once("{$base_dir}Camp_DB_Test.php");
+require_once("{$base_dir}Camp_DB.php");
 require_once("{$base_dir}SmsSource.php");
 require_once("{$base_dir}OmbSource.php");
 require_once("{$base_dir}CampUtils.php");

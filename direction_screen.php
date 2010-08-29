@@ -13,7 +13,6 @@
  * http://code.google.com/p/campfiremanager/
  ******************************************************/
 
-if(file_exists("libraries/GenericBaseClass.php")) {$base_dir='libraries/';} else {$base_dir='';}
 require_once("db.php");
 // Add functions for below rendering and load times and rooms to $times and $rooms
 require_once("{$base_dir}common_functions-template.php");

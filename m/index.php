@@ -21,7 +21,6 @@ if(!isset($_SESSION['openid']) and isset($_GET['login'])) {
   $_SESSION['redirect']='m';
   header("Location: ..");
 }
-$base_dir="../libraries/";
 require_once("../db.php");
 require_once("{$base_dir}CampUtils.php");
 ?><html>

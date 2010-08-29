@@ -13,33 +13,34 @@
  ******************************************************/
 
 function renderHelp($class_pointer, $showWeb=FALSE, $marquee='') {
+  global $Camp_DB;
   $class_pointer->doDebug("renderHelp();");
-  $display_commands="Identify with this service by sending 
-".                  "<b>I &lt;your name&gt; [email:your@email.address] [http://your.web.site]</b>
-".                  "(there are more options for identification by going to the website)";
-  if(0==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
-    $display_commands.="
-}
-".                  "Propose a talk by sending <b>P &lt;Time Slot&gt; &lt;Slots Used&gt; &lt;Talk Title&gt;</b>";
-  } else {
-    $display_commands.="
-}
-".                  "Propose a talk by sending <b>P &lt;Time Slot&gt; &lt;Talk Title&gt;</b>";
-  }
-  $display_commands.="
-".                  "Cancel a talk by sending <b>C &lt;Talk Number&gt; &lt;Time Slot&gt; [Reason]</b>
-".                  "Rename a talk by sending <b>E &lt;Talk Number&gt; &lt;Time Slot&gt; &lt;New Talk Title&gt;</b>
-".                  "Attend a talk by sending <b>A &lt;Talk Number&gt;</b>
-".                  "Decline the attendance of a talk by sending <b>R &lt;Talk Number&gt;</b>
-".                  "Note: You can combine multiple A and R commands in one message. 
-".                  "Statements surrounded with &lt;&gt; are mandatory options, those statements surrounded with [] are optional.
-".                  "These commands should be sent to your preferred ";
   $contact_methods=$class_pointer->getAllConnectionMethods();
-  $class_pointer->doDebug("contact_methods: " . var_export($contact_methods, TRUE) . "", 2);
-  if($contact_methods['tel']!='') {$display_commands.="mobile service";}
-  if($contact_methods['tel']!='' AND $contact_methods['omb']!='') {$display_commands.=" or ";}
-  if($contact_methods['omb']!='') {$display_commands.="microblogging service";}
-  $display_commands.=" listed above.";
+
+  if($contact_methods['tel']!='' OR $contact_methods['omb']!='') {
+    $display_commands="Identify with this service by sending 
+".                    "<b>I &lt;your name&gt; [email:your@email.address] [http://your.web.site]</b>
+".                    "(there are more options for identification by going to the website)";
+    if(0==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
+      $display_commands.="
+".                       "Propose a talk by sending <b>P &lt;Time Slot&gt; &lt;Slots Used&gt; &lt;Talk Title&gt;</b>";
+    } else {
+      $display_commands.="
+".                       "Propose a talk by sending <b>P &lt;Time Slot&gt; &lt;Talk Title&gt;</b>";
+    }
+    $display_commands.="
+".                    "Cancel a talk by sending <b>C &lt;Talk Number&gt; &lt;Time Slot&gt; [Reason]</b>
+".                    "Rename a talk by sending <b>E &lt;Talk Number&gt; &lt;Time Slot&gt; &lt;New Talk Title&gt;</b>
+".                    "Attend a talk by sending <b>A &lt;Talk Number&gt;</b>
+".                    "Decline the attendance of a talk by sending <b>R &lt;Talk Number&gt;</b>
+".                    "Note: You can combine multiple A and R commands in one message. 
+".                    "Statements surrounded with &lt;&gt; are mandatory options, those statements surrounded with [] are optional.
+".                    "These commands should be sent to your preferred ";
+    if($contact_methods['tel']!='') {$display_commands.="mobile service";}
+    if($contact_methods['tel']!='' AND $contact_methods['omb']!='') {$display_commands.=" or ";}
+    if($contact_methods['omb']!='') {$display_commands.="microblogging service";}
+    $display_commands.=" listed above.";
+  }
 
   if($marquee=='') {$marquee='<marquee class="HelpInfo" behaviour="scroll" scrollamount="0.5" direction="up">';}
   if($marquee!='') {$return="$marquee\r\n";} else {$return="<div class=\"HelpInfo\">\r\n";}
