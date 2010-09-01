@@ -36,7 +36,7 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
 } elseif($Camp_DB->checkAdmin()==1) { // Otherwise you'll only get it if you're in the admin list
   $config_fields=array('admin_regen'=>'',
                        'support_regen'=>'',
-                       'website'=>"The public URL of this site. Leave blank if you don't want public access.",
+                       'website'=>"The public URL of this site. Leave blank if you don't want to advertise public access.",
                        'event_title'=>'What is the title of your event?',
                        'FixRoomOffset'=>'Relative to the start time of a session, at what point is the room allocated to a talk fixed?',
                        'UTCOffset'=>'The UTC offset for the timezone, e.g. +00:00 for GMT or -08:00 for Pacific Standard Time.',
