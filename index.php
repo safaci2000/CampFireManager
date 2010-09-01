@@ -156,11 +156,26 @@ if(!isset($_SESSION['openid'])) {
     case "I":
       $details=$Camp_DB->getContactDetails(0, TRUE);
       echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n" . 
-                "<input type=\"hidden\" name=\"state\" value=\"Id\">\r\nYour name:\r\n" . 
-                "<div class=\"data_Name\"><span class=\"Label\">Name:</span> <span=\"Data\"><input type=\"text\" name=\"name\" value=\"" . CampUtils::arrayGet($details, 'strName', '') . "\" /></span></div>";
+                "<input type=\"hidden\" name=\"state\" value=\"Id\">";
+      echo "<table width=\"100%\"><tr><td colspan=\"3\" class=\"Label DrawAttention Right\">Name:</td><td colspan=\"3\" class=\"Data Left\"><input type=\"text\" name=\"name\" value=\"" . CampUtils::arrayGet($details, 'strName', '') . "\" /></td></tr>";
+      $intCol=0;
       foreach($contact_fields as $proto) {
-        echo "\r\n<div class=\"data_$proto\"><span class=\"Label\">$proto:</span> <span=\"Data\"><input type=\"text\" name=\"$proto\" value=\"" . CampUtils::arrayGet($details, $proto, '') . "\" /></span></div>";
+        if($intCol==0) {echo "<tr>";}
+        echo "\r\n<td class=\"Label DrawAttention Right\">$proto:</td><td class=\"Data Left\"><input type=\"text\" name=\"$proto\" value=\"" . CampUtils::arrayGet($details, $proto, '') . "\" /></td>";
+        $intCol++;
+        if($intCol==3) {
+          echo "</tr>";
+          $intCol=0;
+        }
       }
+      if($intCol!=0) {
+        while($intCol<3) {
+          echo "<td>&nbsp;</td><td>&nbsp;</td>";
+          $intCol++;
+        }
+        echo "</tr>";
+      }
+      echo "</table>";
       echo "\r\n<input type=\"submit\" value=\"Go\"/> <a href=\"$baseurl\">Or, click here if you changed your mind.</a>\r\n</form>";
       break;
     case "Id":

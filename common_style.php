@@ -40,6 +40,7 @@ tr.entry {height:<?php echo $row_heights; ?>%;}
 .Count {font-size:9px;}
 .Label {font-size:9px;}
 .Right {text-align:right;}
+.Left {text-align:left;}
 .Long {background-color:Silver;}
 .Time_title {background-color:Silver;}
 .Next {background-color:LightBlue;}
