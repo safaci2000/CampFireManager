@@ -43,6 +43,8 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
                        'timezone_name'=>'This is the name of your timezone (e.g. Europe/London)',
                        'AboutTheEvent'=>'Please provide some details about the content of your event.',
                        'hashtag'=>"Optional: What do you want people (including this script) to use as the hashtag for today?, including the # sign itself.",
+                       'irc'=>"Optional: What is the event's IRC channel - leave blank to hide this.",
+                       'muc'=>"Optional: What is the event's XMPP Multi User Chat session - leave blank to hide this.",
                        'sessions_fixed_to_one_slot'=>"Do you want your sessions to be limited to only one slot?",
                        'dynamically_sort_whole_board_by_attendees'=>'',
                        'require_contact_details'=>''
