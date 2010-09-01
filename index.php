@@ -31,6 +31,7 @@ $event_details = CampUtils::arrayGet($Camp_DB->config, 'AboutTheEvent',  'Event 
   <head>
   <title><?php echo $event_title; ?></title>
   <link rel="stylesheet" type="text/css" href="common_style.php" />
+  <link rel="openid.server" href="<?php echo $baseurl; ?>/openid_server/" />
   <script type="text/javascript" src="external/jquery-1.4.2.min.js"></script>
   <script type="text/javascript" src="external/jquery.marquee.js"></script>
   <?php $xajax->printJavascript(); ?>
