@@ -39,6 +39,9 @@ $event_details = CampUtils::arrayGet($Camp_DB->config, 'AboutTheEvent',  'Event 
   <script type="text/javascript">
     $(document).ready(function(){
       $('.HideWithJS').hide('fast');
+      $('.RespondToAction').fadeOut(4000, function() {
+        $(this).remove();
+      });
     });
     function update() {
       xajax_ajaxPopulateTable();
