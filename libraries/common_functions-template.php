@@ -42,12 +42,21 @@ function renderHelp($class_pointer, $showWeb=FALSE, $marquee='') {
     $display_commands.=" listed above.";
   }
 
+  if($display_commands=='') {
+    $display_commands="You may wish to get support from one of the support staff for this event.";
+  } else {
+    $display_commands.="\r\nAlternatively, support staff can assist you, should you not wish to use the above method of accessing the system.";
+  }
+
   if($marquee=='') {$marquee='<marquee class="HelpInfo" behaviour="scroll" scrollamount="0.5" direction="up">';}
   if($marquee!='') {$return="$marquee\r\n";} else {$return="<div class=\"HelpInfo\">\r\n";}
-  if($contact_methods['tel']!='') {$return.="<div class=\"numberbar\"><span class=\"Label\">Phones:</span> <span class=\"Data\">{$contact_methods['tel']}</span></div>\r\n";}
-  if($contact_methods['omb']!='') {$return.="<div class=\"ombbar\"><span class=\"Label\">Microblogging:</span> <span class=\"Data\">{$contact_methods['omb']}</span></div>\r\n";}
   if($contact_methods['web']!='') {$return.="<div class=\"webbar\"><span class=\"Label\">Website:</span> <span class=\"Data\">{$contact_methods['web']}</span></div>\r\n<div class=\"webbar\"><span class=\"Label\">Mobile site:</span> <span class=\"Data\">{$contact_methods['web']}m/</span></div>\r\n";}
   if(isset($class_pointer->config['hashtag']) and $class_pointer->config['hashtag']!='') {$return.="<div class=\"hashtag\"><span class=\"Label\">Event Hashtag:</span> <span class=\"Data\">{$class_pointer->config['hashtag']}</span></div>\r\n";}
+  if(isset($class_pointer->config['irc']) and $class_pointer->config['irc']!='') {$return.="<div class=\"irc\"><span class=\"Label\">Event IRC Channel:</span> <span class=\"Data\">{$class_pointer->config['irc']}</span></div>\r\n";}
+  if(isset($class_pointer->config['muc']) and $class_pointer->config['muc']!='') {$return.="<div class=\"muc\"><span class=\"Label\">Event XMPP Chatroom:</span> <span class=\"Data\">{$class_pointer->config['muc']}</span></div>\r\n";}
+  if($contact_methods['tel']!='' or $contact_methods['omb']!='') {$return.="<br />";}
+  if($contact_methods['tel']!='') {$return.="<div class=\"numberbar\"><span class=\"Label\">Phones:</span> <span class=\"Data\">{$contact_methods['tel']}</span></div>\r\n";}
+  if($contact_methods['omb']!='') {$return.="<div class=\"ombbar\"><span class=\"Label\">Microblogging:</span> <span class=\"Data\">{$contact_methods['omb']}</span></div>\r\n";}
   if($marquee!='') {$return.="<div class=\"CommandInfo\">" . nl2br($display_commands) . "</div>\r\n</marquee>\r\n";} else {$return.="<div class=\"CommandInfo Header\">Command Information: <span class=\"CommandInfo Show\">Click here to expand your options</span><span class=\"CommandInfo Hide\">$display_commands</span></div>\r\n</div>\r\n";}
   return($return);
 }
