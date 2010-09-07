@@ -1347,6 +1347,44 @@ class Camp_DB extends GenericBaseClass {
     return $mainbody;
   }
 
+  function sendTimetable($only_mine = FALSE) {
+    if($only_mine==FALSE) {
+      $this->doDebug("sendTimetable(FALSE);");
+    } else {
+      $this->doDebug("sendTimetable(TRUE);");
+    }
+
+    // Get the talks this person is presenting
+    $my_talks=$this->getMyTalks();
+    // Get the talks this person is attending
+    $attend_talks=$this->getTalksIAmAttending();
+    $mainbody = '';
+    if(count($this->rooms)>0) {
+      foreach($this->times as $intTimeID => $arrTime) {
+        if($intTimeID>=$this->now_time and $intTimeID<=($this->now_time+4)) {
+          foreach($this->rooms as $intRoomID => $arrRoom) {
+            if($this->arrTalkSlots[$intTimeID][$intRoomID]<=0) {
+            } elseif($this->arrTalks[$this->arrTalkSlots[$intTimeID][$intRoomID]]['intTimeID']!=$intTimeID) {
+            } else {
+              $talk=$this->arrTalks[$this->arrTalkSlots[$intTimeID][$intRoomID]];
+              if($talk['intLength']>1) {
+                $talk['TalkTitle'].=" ({$talk['intLength']} sessions long)";
+              }
+              if($only_mine==FALSE) {
+                if($mainbody!='') {$mainbody.=' | ';}
+                $mainbody.="At " . $this->arrTimeEndPoints[$intTimeID]['s'] . " - " . $talk['strTalkTitle'] . " (" . $arrRoom['strRoom']  . ")";
+              } elseif($only_mine==TRUE and (isset($my_talks[$talk['intTalkID']]) or isset($attend_talks[$talk['intTalkID']]))) {
+                if($mainbody!='') {$mainbody.=' | ';}
+                $mainbody.="At " . $this->arrTimeEndPoints[$intTimeID]['s'] . " - " . $talk['strTalkTitle'] . " (" . $arrRoom['strRoom']  . ")";
+              }
+            }
+          }
+        }
+      }
+    }
+    $this->sendMessage($mainbody);
+  }
+
   function getDirectionTemplate() {
     // Here is our list of directions.
     $directions=array("UL", "U", "UR", "L", "C", "R", "DL", "D", "DR");

@@ -158,6 +158,17 @@ while(true) {
           }
         }
         break;
+      case "T":
+      case "TIME":
+      case "TIMETABLE":
+        $Camp_DB->sendTimeTable(FALSE);
+        break;
+      case "M":
+      case "MYT":
+      case "MYTIME":
+      case "MYTIMETABLE":
+        $Camp_DB->sendTimeTable(TRUE);
+        break;
       default:
     }
   }
