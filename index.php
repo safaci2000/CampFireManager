@@ -237,17 +237,17 @@ if(!isset($_SESSION['openid'])) {
     case "Pr":
       echo "<p class=\"RespondToAction\">Adding your talk</p>\r\n";
       if(1==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
-        $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['title']), 0);
+        $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['title']), 0, CampUtils::arrayGet($_SESSION, 'this_date', ''));
       } else {
-        $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['length'], $_REQUEST['title']), 0);
+        $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['length'], $_REQUEST['title']), 0, CampUtils::arrayGet($_SESSION, 'this_date', ''));
       }
       break;
     case "Sr":
       echo "<p class=\"RespondToAction\">Adding your talk</p>\r\n";
       if(1==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
-        $Camp_DB->insertStaticTalk($_REQUEST['slot'], $_REQUEST['room'], $_REQUEST['title']);
+        $Camp_DB->insertStaticTalk($_REQUEST['slot'], $_REQUEST['room'], $_REQUEST['title'], 1, CampUtils::arrayGet($_SESSION, 'this_date', ''));
       } else {
-        $Camp_DB->insertStaticTalk($_REQUEST['slot'], $_REQUEST['room'], $_REQUEST['title'], $_REQUEST['length']);
+        $Camp_DB->insertStaticTalk($_REQUEST['slot'], $_REQUEST['room'], $_REQUEST['title'], $_REQUEST['length'], CampUtils::arrayGet($_SESSION, 'this_date', ''));
       }
       break;
     case "C":
