@@ -722,14 +722,15 @@ class Camp_DB extends GenericBaseClass {
   }
 
   function insertStaticTalk($time, $room, $talk, $length=1, $date='') {
-    if($date=='') {$date=date('Y-m-d');}
+    if($this->isAdmin==0) {$date='';}
+    if($date=='') {$date=date('Y-m-d');} else {$date=date('Y-m-d', strtotime($date));}
     $this->doDebug("insertStaticTalk($time, $room, $talk, $length, $date);");
     $talk=$this->escape($talk);
     $stop=TRUE;
     if(isset($this->rooms[$room]) and (0==$this->rooms[$room]['boolIsDynamic'] or 1==CampUtils::arrayGet($this->config, 'dynamically_sort_whole_board_by_attendees', "0"))) {$stop=FALSE;}
     $intTalkID=0;
-    list($this->arrTalkSlots, $this->arrTalks)=$this->readTalkData();
-    if($time<=$this->now_time) {$time=$this->now_time+1;}
+    list($this->arrTalkSlots, $this->arrTalks)=$this->readTalkData($date);
+    if($date==date('Y-m-d') and $time<=$this->now_time) {$time=$this->now_time+1;}
     while($intTalkID==0 AND $stop==FALSE) {
       if(count($this->arrTalkSlots[$time])>0) {
         foreach($this->arrTalkSlots[$time] as $intRoomID=>$intTalkNumber) {
@@ -762,7 +763,8 @@ class Camp_DB extends GenericBaseClass {
   }
 
   function insertTalk($commands, $boolFixed=0, $date='') {
-    if($date=='') {$date=date('Y-m-d');}
+    if($this->isAdmin==0) {$date='';}
+    if($date=='') {$date=date('Y-m-d');} else {$date=date('Y-m-d', strtotime($date));}
     $this->doDebug("insertTalk(" . print_r($commands, TRUE) . ", $boolFixed, $date);");
     $talk='';
     $time=0;
@@ -791,7 +793,7 @@ class Camp_DB extends GenericBaseClass {
       if($boolFixed==1 and $this->isAdmin==0) {$boolFixed=0;}
       $talk=$this->escape($talk);
       list($this->arrTalkSlots, $this->arrTalks)=$this->readTalkData();
-      if($time<=$this->now_time) {$time=$this->now_time+1;}
+      if($date==date('Y-m-d') and $time<=$this->now_time) {$time=$this->now_time+1;}
       while($intTalkID==0 AND $stop==FALSE) {
         if(count($this->arrTalkSlots[$time])>0) {
           foreach($this->arrTalkSlots[$time] as $room=>$intTalkNumber) {
@@ -861,8 +863,10 @@ class Camp_DB extends GenericBaseClass {
     }
   }
 
-  function readTalkData() {
-    $this->doDebug("readTalkData();");
+  function readTalkData($date='') {
+    if($this->isAdmin==0) {$date='';}
+    if($date=='') {$date=date('Y-m-d');} else {$date=date('Y-m-d', strtotime($date));}
+    $this->doDebug("readTalkData($date);");
     $arrTalkSlots = array();
     $arrTalks=$this->getTalks();
     $arrAttendanceByTalks=$this->getAttendeesCount();
