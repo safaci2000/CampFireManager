@@ -1,2 +1,2 @@
 This is the default OpenID server from the PHP-OpenID service.
-Please note, it requires php5-db to function correctly.
+Please note, it requires php-db to function correctly.

@@ -55,15 +55,19 @@ class Camp_DB extends GenericBaseClass {
 
   function refresh() {
     $this->doDebug("refresh()");
-    $this->today = date("Y-m-d");
+    if(!isset($_SESSION['today'])) {
+      $this->today = date("Y-m-d");
+    } else {
+      $this->today = date("Y-m-d", strtotime($_SESSION['today']));
+    }
     $this->timetypes = $this->getTimeTypes();
     $this->times = $this->getTimes();
     $this->rooms = $this->getRooms();
     $this->config = $this->getConfig();
-    if(!isset($this->config['event_start']) OR $this->config['event_start']=='') {
+    if(''==CampUtils::arrayGet($this->config, 'event_start', '')) {
       $this->config['event_start'] = $this->today;
     }
-    if(!isset($this->config['event_end']) OR $this->config['event_end']=='') {
+    if(''==CampUtils::arrayGet($this->config, 'event_end', '')) {
       $this->config['event_end'] = $this->today;
     }
     $now_and_next = $this->getNowAndNextTime();
@@ -79,21 +83,28 @@ class Camp_DB extends GenericBaseClass {
     $this->doDebug("getNowAndNextTime('$offset');");
     $this->makeTimeArray();
     $now_time = ($offset==='') ? strtotime('Now') : strtotime($offset);
-
-    // Find the "Now" and "Next" time blocks
-    $now = 0;
-    $next = '';
-    foreach($this->times as $intTimeID => $arrTime) {
-      $timestring = $arrTime['strTime'];
-      $timetype = $arrTime['intTimeType'];
-      $intTime = strtotime(date("Y-m-d ") . $this->arrTimeEndPoints[$intTimeID]['s']);
-      if ($intTime < $now_time) {
-        $now = $intTimeID;
+    if(date('Y-m-d') == date('Y-m-d', strtotime($this->today))) {
+      // Find the "Now" and "Next" time blocks
+      $now = 0;
+      $next = '';
+      foreach($this->times as $intTimeID => $arrTime) {
+        $timestring = $arrTime['strTime'];
+        $timetype = $arrTime['intTimeType'];
+        $intTime = strtotime(date("Y-m-d ") . $this->arrTimeEndPoints[$intTimeID]['s']);
+        if ($intTime < $now_time) {
+          $now = $intTimeID;
+        }
+        if ($intTime >= $now_time) {
+          $next = $intTimeID;
+          break;
+        }
       }
-      if ($intTime >= $now_time) {
-        $next = $intTimeID;
-        break;
-      }
+    } elseif(strtotime(date('Y-m-d 00:00:00')) < strtotime(date('Y-m-d 00:00:00', strtotime($this->today)))) {
+      $now=0;
+      $next=0;
+    } elseif(strtotime(date('Y-m-d 00:00:00')) > strtotime(date('Y-m-d 00:00:00', strtotime($this->today)))) {
+      $now=99;
+      $next=99;
     }
     return array('now'=>$now, 'next'=>$next);
   }
@@ -348,17 +359,13 @@ class Camp_DB extends GenericBaseClass {
     }
   }
 
-
   function updateRoom($intRoomID, $strRoom, $intCapacity, $boolIsDynamic) {
     $this->setDebug(255);
     $this->doDebug("updateRoom($intRoomID, $strRoom, $intCapacity, $boolIsDynamic) from " . print_r($this->rooms[$intRoomID], TRUE) . ";");
     if(!isset($this->rooms[$intRoomID]) AND $strRoom!='' AND $intCapacity!='') {
       $this->boolUpdateOrInsertSql("INSERT INTO {$this->prefix}rooms (strRoom, intCapacity, boolIsDynamic) VALUES ('$strRoom', '$intCapacity', '$boolIsDynamic')");
     }
-    if(($this->rooms[$intRoomID]['strRoom']!=$strRoom AND $strRoom!='') or 
-       ($this->rooms[$intRoomID]['intCapacity']!=$intCapacity AND $intCapacity!='') or 
-       ($this->rooms[$intRoomID]['boolIsDynamic']!=$boolIsDynamic)
-      ) {
+    if(($this->rooms[$intRoomID]['strRoom']!=$strRoom AND $strRoom!='') or ($this->rooms[$intRoomID]['intCapacity']!=$intCapacity AND $intCapacity!='') or ($this->rooms[$intRoomID]['boolIsDynamic']!=$boolIsDynamic)) {
       $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}rooms SET strRoom='$strRoom', intCapacity='$intCapacity', boolIsDynamic='$boolIsDynamic' WHERE intRoomID='$intRoomID'");
     }
     if(($this->rooms[$intRoomID]['strRoom']!=$strRoom AND $strRoom=='') OR ($this->rooms[$intRoomID]['intRoomID']!=$intCapacity AND $intCapacity=='')) {
@@ -444,14 +451,14 @@ class Camp_DB extends GenericBaseClass {
       if($phone_numbers!='') {$phone_numbers.=", ";}
       $phone_numbers.="{$phone['strNumber']} on the {$phone['strPhone']} Network (with {$phone['intSignal']}% signal)";
     }
-    
+
     $omb_accounts='';
     foreach($omb as $omb_ac) {
       if($omb_accounts!='') {$omb_accounts.=", ";}
       $omb_server=
       $omb_accounts.="@{$omb_ac['strAccount']} on " . parse_url($omb_ac['strApiBase'], PHP_URL_HOST);
     }
-    
+
     $website = CampUtils::arrayGet($this->config, 'website', '');
     return array('tel'=>$phone_numbers, 'omb'=>$omb_accounts, 'web'=>$website);
   }
@@ -471,7 +478,7 @@ class Camp_DB extends GenericBaseClass {
   function setLastMbUpdate($intMbID, $intLastMessage) {
     $this->doDebug("setLastMbUpdate($intMbID, $intLastMessage);");
     $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}account_microblog SET intLastMessage='$intLastMessage' WHERE intMbID='$intMbID'");
-  }  
+  }
 
   function getPhones() {
     $this->doDebug("getPhones();");
@@ -723,7 +730,7 @@ class Camp_DB extends GenericBaseClass {
 
   function insertStaticTalk($time, $room, $talk, $length=1, $date='') {
     if($this->isAdmin==0) {$date='';}
-    if($date=='') {$date=date('Y-m-d');} else {$date=date('Y-m-d', strtotime($date));}
+    if($date=='') {$date=date('Y-m-d', strtotime($this->today));} else {$date=date('Y-m-d', strtotime($date));}
     $this->doDebug("insertStaticTalk($time, $room, $talk, $length, $date);");
     $talk=$this->escape($talk);
     $stop=TRUE;
@@ -759,12 +766,12 @@ class Camp_DB extends GenericBaseClass {
     if($stop!=FALSE) {
       $this->updateStatusScreen("{$this->strName} was unable to propose a talk because there were no more available slots. (Received " . print_r($commands, TRUE) . ")");
       return FALSE;
-    } 
+    }
   }
 
   function insertTalk($commands, $boolFixed=0, $date='') {
     if($this->isAdmin==0) {$date='';}
-    if($date=='') {$date=date('Y-m-d');} else {$date=date('Y-m-d', strtotime($date));}
+    if($date=='') {$date=date('Y-m-d', strtotime($this->today));} else {$date=date('Y-m-d', strtotime($date));}
     $this->doDebug("insertTalk(" . print_r($commands, TRUE) . ", $boolFixed, $date);");
     $talk='';
     $time=0;
@@ -822,7 +829,7 @@ class Camp_DB extends GenericBaseClass {
       if($stop!=FALSE) {
         $this->updateStatusScreen("{$this->strName} was unable to propose a talk because there were no more available slots. (Received " . print_r($commands, TRUE) . ")");
         return FALSE;
-      } 
+      }
     }
   }
 
@@ -871,7 +878,7 @@ class Camp_DB extends GenericBaseClass {
     $arrTalks=$this->getTalks();
     $arrAttendanceByTalks=$this->getAttendeesCount();
     $arrPeopleAsPresentersOnly=$this->getPresenters();
-    
+
     // Prepopulate the talk table with "empty" and "lunch" slots
     foreach($this->times as $intTimeID => $arrTime) {
       $strTime = $arrTime['strTime'];
@@ -916,6 +923,7 @@ class Camp_DB extends GenericBaseClass {
 
   function sortRooms() {
     $this->doDebug("sortRooms();");
+    if($this->today!=date('Y-m-d')) {return TRUE;}
     // Clearing Rooms.
     foreach($this->times as $intTimeID=>$arrTime) {
       foreach($this->rooms as $intRoomID=>$arrRoom) {
@@ -1094,7 +1102,7 @@ class Camp_DB extends GenericBaseClass {
         }
         if($contact_data!='' AND $data!='') {$contact_data.=' ';}
         $contact_data.=$data;
-      } 
+      }
     }
     $this->_updateIdentityInfo($contact_name, $contact_data);
     $this->updateStatusScreen("$contact_name updated their details on the system.");
@@ -1187,7 +1195,7 @@ class Camp_DB extends GenericBaseClass {
       $this->refresh();
     }
   }
- 
+
   function getAdmins() {
     $this->doDebug("getAdmins()");
     $return=$this->qryMap('"admins"', 'count(boolIsAdmin)', "{$this->prefix}people WHERE boolIsAdmin!=0");
@@ -1250,12 +1258,13 @@ class Camp_DB extends GenericBaseClass {
       $mainbody.="<table class=\"WholeDay\">\r\n";
       $mainbody.="  <thead>\r\n";
       $mainbody.="    <tr class=\"Time_title\">\r\n";
+      $mainbody.="      <th class=\"Time_title\">&nbsp;</th>";
       foreach($this->times as $intTimeID => $arrTime) {
         $strTime = $arrTime['strTime'];
         $intTimeType = $arrTime['intTimeType'];
-        if($intTimeID==$this->now_time) {$strTime.="<br />(On Now)";} elseif ($intTimeID==$this->next_time) {$strTime.="<br />(Next)";}  
+        if($intTimeID==$this->now_time and strtotime(date("Y-m-d"))==strtotime($this->today)) {$strTime.="<br />(On Now)";} elseif ($intTimeID==$this->next_time) {$strTime.="<br />(Next)";}
         $mainbody.="      <th class=\"Time_title\">Slot $intTimeID<br />$strTime";
-        if($intTimeID>$this->now_time and $includeProposeLink==TRUE and $boolAllNonDynamicRooms==FALSE) {
+        if($intTimeID>$this->now_time and $includeProposeLink==TRUE and $boolAllNonDynamicRooms==FALSE and strtotime(date("Y-m-d"))<=strtotime($this->today)) {
           $mainbody.="<br /><a href=\"?state=P&slot=$intTimeID\">New Talk</a>";
         }
         $mainbody.="</th>\r\n";
@@ -1266,6 +1275,15 @@ class Camp_DB extends GenericBaseClass {
 
       foreach($this->rooms as $intRoomID => $arrRoom) {
         $mainbody.="    <tr class=\"Room{$intRoomID}\">\r\n";
+        $mainbody.="      <th class=\"Room{$intRoomID}\">";
+        if($boolHasNonDynamicRooms==TRUE) {
+          if($arrRoom['boolIsDynamic']=='0') {
+            $mainbody.="Static<br /><br />";
+          } else {
+            $mainbody.="Dynamic<br /><br />";
+          }
+        }
+        $mainbody.="{$arrRoom['strRoom']}</th>";
         foreach($this->times as $intTimeID => $arrTime) {
           $strTime = $arrTime['strTime'];
           $intTimeType = $arrTime['intTimeType'];
@@ -1277,13 +1295,9 @@ class Camp_DB extends GenericBaseClass {
             } else {
               $mainbody.="Empty";
             }
-            if(isset($this->intPersonID) and ($intTimeID > $this->now_time) ) {
+            if(isset($this->intPersonID) and ($intTimeID > $this->now_time) and strtotime(date("Y-m-d"))<=strtotime($this->today)) {
               if($arrRoom['boolIsDynamic']=='0' or $this->config['dynamically_sort_whole_board_by_attendees']==0) {
                 $mainbody.="<div class=\"label\"><a href=\"?state=S&slot=$intTimeID&room=$intRoomID\">New Talk</a></div>";
-              } else {
-                if($boolHasNonDynamicRooms==TRUE) {
-                  $mainbody.="<div class=\"label\">New talks will be dynamically sorted</div>";
-                }
               }
             }
             $mainbody.="</td></tr></table></td>";
@@ -1293,12 +1307,12 @@ class Camp_DB extends GenericBaseClass {
             $talk=$this->arrTalks[$this->arrTalkSlots[$intTimeID][$intRoomID]];
             if($talk['boolFixed']==1) {$class="Time{$intTimeID} Fixed";} else {$class="Time{$intTimeID}";}
             if($talk['intLength']>1) {
-              $colspan=" colspan=\"{$talk['intLength']}\""; 
+              $colspan=" colspan=\"{$talk['intLength']}\"";
               for($c=1; $c<=count($talk['intLength']); $c++) {$class.=" Time" . ($intTimeID + $c);}
               $class.=" Long";
               $talk['TalkTitle'].=" ({$talk['intLength']} sessions long)";
             } else {$colspan='';}
-            if($intTimeID==$this->now_time) {$class.=" Now";} elseif ($intTimeID==$this->next_time) {$class.=" Next";}  
+            if($intTimeID==$this->now_time) {$class.=" Now";} elseif ($intTimeID==$this->next_time) {$class.=" Next";}
             $mainbody.="      <td class=\"Entry $class\"$colspan>\r\n";
             $mainbody.="        <table class=\"EntryBody\">\r\n";
             if($intTimeID>$this->now_time && $talk['intTalkID']!='') {

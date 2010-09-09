@@ -15,8 +15,6 @@ if(session_id()==='') {session_start();}
 if(isset($_SESSION['redirect'])) {unset($_SESSION['redirect']);}
 require_once("db.php");
 
-echo "<!-- " . print_r($_REQUEST, TRUE) . " -->\r\n";
-
 if(!isset($Camp_DB->config['adminkey'])) {$Camp_DB->generateNewAdminKey();}
 if(!isset($Camp_DB->config['supportkey'])) {$Camp_DB->generateNewSupportKey();}
 // You're only allowed here if you've already logged in

@@ -117,6 +117,11 @@ if(!isset($_SESSION['openid'])) {
   }
 } else {
   $Camp_DB->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>CampUtils::arrayGet($_SESSION, 'name', ''), 'OpenID_Mail'=>CampUtils::arrayGet($_SESSION, 'email', '')));
+  if($Camp_DB->checkAdmin()!=0 and isset($_GET['admin_use_date'])) {
+    if($_GET['admin_use_date']=='') {$_GET['admin_use_date']='today';}
+    $_SESSION['today']=date("Y-m-d", strtotime($_GET['admin_use_date']));
+    $Camp_DB->refresh();
+  }
   $details=$Camp_DB->getContactDetails(0, TRUE);
   switch(CampUtils::arrayGet($_REQUEST, 'state', '')) {
     case "I":
@@ -237,9 +242,9 @@ if(!isset($_SESSION['openid'])) {
     case "Pr":
       echo "<p class=\"RespondToAction\">Adding your talk</p>\r\n";
       if(1==CampUtils::arrayGet($Camp_DB->config, 'sessions_fixed_to_one_slot', 0)) {
-        $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['title']), 0, CampUtils::arrayGet($_SESSION, 'this_date', ''));
+        $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['title']), 0);
       } else {
-        $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['length'], $_REQUEST['title']), 0, CampUtils::arrayGet($_SESSION, 'this_date', ''));
+        $Camp_DB->insertTalk(array($_REQUEST['slot'], $_REQUEST['length'], $_REQUEST['title']), 0);
       }
       break;
     case "Sr":
@@ -271,10 +276,13 @@ if(!isset($_SESSION['openid'])) {
       break;
   }
   $Camp_DB->refresh();
-  echo "<div class=\"MenuBar\">\r\n<a href=\"$baseurl\" class=\"HideWithJS\">Reload this static page</a><span class=\"HideWithJS\"> |\r\n</span><a href=\"$baseurl?state=logout\">Log out</a> |\r\n <a href=\"$baseurl?state=O\">Add other access methods</a> |\r\n <a href=\"$baseurl?state=I\">Amend contact details</a> |\r\n <a href=\"{$baseurl}ical/\">ical</a> ";
+  echo "<div class=\"MenuBar\">\r\n<a href=\"$baseurl\" class=\"HideWithJS\">Reload this static page</a><span class=\"HideWithJS\"> |\r\n</span><a href=\"$baseurl?state=logout\">Log out</a> |\r\n <a href=\"$baseurl?state=O\">Add other access methods</a> |\r\n <a href=\"$baseurl?state=I\">Amend contact details</a> |\r\n <a href=\"{$baseurl}ical/\">iCal</a> ";
   if($Camp_DB->checkSupport()!=0 or $Camp_DB->checkAdmin()!=0) {echo "|\r\n <a href=\"{$baseurl}support/\">Provide support to attendees</a>";}
   if($Camp_DB->checkAdmin()!=0) {echo "|\r\n <a href=\"{$baseurl}admin.php\">Modify config values</a>";}
   echo "\r\n</div>\r\n";
+  if($Camp_DB->checkAdmin()!=0) {
+    echo "<form method=\"get\" action=\"$baseurl\" class=\"MenuBar\">Show a different date - leave blank for today: <input name=\"admin_use_date\" size=\"10\" value=\"" . CampUtils::arrayGet($_SESSION, 'today', '') . "\"> <input type=\"submit\" value=\"Go\"></form>";
+  }
   echo '  <div id="mainbody" class="mainbody">' . $Camp_DB->getTimetableTemplate(FALSE, TRUE). '</div>
   <div id="sms_list" class="sms_list">' . $Camp_DB->getSmsTemplate() . '</div>
   <script type="text/javascript">update();</script>';
