@@ -17,6 +17,40 @@ require_once("db.php");
 require_once("{$base_dir}common_functions-template.php");
 require_once("{$base_dir}common_xajax.php");
 
+switch(CampUtils::arrayGet($_REQUEST,'state','')) {
+  case 'logout':
+    $err="You have successfully logged out. If you want to act further, please try again. <br />";
+    foreach($_SESSION as $key=>$val) {unset($_SESSION[$key]);}
+  break;
+  case 'fail':
+    $err="There was a problem logging you in with these details. Please try again.<br />";
+    foreach($_SESSION as $key=>$val) {unset($_SESSION[$key]);}
+  break;
+  case 'cancel':
+    $err="You clicked on cancel. Please try again.<br />";
+    foreach($_SESSION as $key=>$val) {unset($_SESSION[$key]);}
+  break;
+}
+
+if(isset($_SESSION['openid'])) {
+  $Camp_DB->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>CampUtils::arrayGet($_SESSION, 'name', ''), 'OpenID_Mail'=>CampUtils::arrayGet($_SESSION, 'email', '')));
+  if($Camp_DB->checkAdmin()!=0 and isset($_GET['admin_use_date'])) {
+    if($_GET['admin_use_date']=='') {$_GET['admin_use_date']='today';}
+    $_SESSION['today']=date("Y-m-d", strtotime($_GET['admin_use_date']));
+    $Camp_DB->refresh();
+  }
+  $details=$Camp_DB->getContactDetails(0, TRUE);
+  switch(CampUtils::arrayGet($_REQUEST, 'state', '')) {
+    case "I":
+    case "Id":
+      break;
+    default:
+    if('An OpenID User'==CampUtils::arrayGet($details, 'strName', 'An OpenID User') and '1'==CampUtils::arrayGet($Camp_DB->config, 'require_contact_details', 0)) {
+      header("Location: $baseurl?state=I");
+    }
+  }
+}
+
 // Find the "Now" and "Next" time blocks
 $now_and_next=$Camp_DB->getNowAndNextTime();
 $now=$now_and_next['now'];
@@ -52,21 +86,6 @@ $event_details = CampUtils::arrayGet($Camp_DB->config, 'AboutTheEvent',  'Event 
   </style>
   <body>
 <?php
-
-switch(CampUtils::arrayGet($_REQUEST,'state','')) {
-  case 'logout':
-    $err="You have successfully logged out. If you want to act further, please try again. <br />";
-    foreach($_SESSION as $key=>$val) {unset($_SESSION[$key]);}
-  break;
-  case 'fail':
-    $err="There was a problem logging you in with these details. Please try again.<br />";
-    foreach($_SESSION as $key=>$val) {unset($_SESSION[$key]);}
-  break;
-  case 'cancel':
-    $err="You clicked on cancel. Please try again.<br />";
-    foreach($_SESSION as $key=>$val) {unset($_SESSION[$key]);}
-  break;
-}
 
 if(!isset($_SESSION['openid'])) {
   echo "<h1>Login to CampFireManager for $event_title</h1>";
@@ -116,22 +135,6 @@ if(!isset($_SESSION['openid'])) {
     echo '<div id="mainbody" class="mainbody"></div><script type="text/javascript">update();</script>';
   }
 } else {
-  $Camp_DB->getMe(array('OpenID'=>$_SESSION['openid'], 'OpenID_Name'=>CampUtils::arrayGet($_SESSION, 'name', ''), 'OpenID_Mail'=>CampUtils::arrayGet($_SESSION, 'email', '')));
-  if($Camp_DB->checkAdmin()!=0 and isset($_GET['admin_use_date'])) {
-    if($_GET['admin_use_date']=='') {$_GET['admin_use_date']='today';}
-    $_SESSION['today']=date("Y-m-d", strtotime($_GET['admin_use_date']));
-    $Camp_DB->refresh();
-  }
-  $details=$Camp_DB->getContactDetails(0, TRUE);
-  switch(CampUtils::arrayGet($_REQUEST, 'state', '')) {
-    case "I":
-    case "Id":
-      break;
-    default:
-    if('An OpenID User'==CampUtils::arrayGet($details, 'strName', 'An OpenID User') and '1'==CampUtils::arrayGet($Camp_DB->config, 'require_contact_details', 0)) {
-      header("Location: $baseurl?state=I");
-    }
-  }
   echo "<h1 class=\"headerbar\">$event_title</h1>\r\n";
   switch(CampUtils::arrayGet($_REQUEST, 'state', '')) {
     case "O":
