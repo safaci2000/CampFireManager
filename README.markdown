@@ -23,6 +23,7 @@ Version: 0.1-ALPHA
 
 These packages are based on requirements in Ubuntu:
 
+    gammu
     gammu-smsd
     apache2
     php5-mysql
