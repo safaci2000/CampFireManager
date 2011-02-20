@@ -16,9 +16,9 @@
 //Database Connection Values
 $db_CampFire=array(
   "host"=>"localhost", 
-  "user"=>"CampFire", 
-  "pass"=>"CampFire", 
-  "base"=>"CampFire",
+  "user"=>"CampFireManager", 
+  "pass"=>"CampFireManager", 
+  "base"=>"CampFireManager",
   "prefix"=>""
 );
 $db_Phone=array(
