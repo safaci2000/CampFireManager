@@ -15,7 +15,7 @@ if(session_id()==='') {session_start();}
 if(isset($_SESSION['redirect'])) {unset($_SESSION['redirect']);}
 if(isset($_SESSION['openid']) and isset($_GET['logout'])) {
   $_SESSION['redirect']='m';
-  header("Location: ..\?state=logout");
+  header("Location: ../?state=logout");
 }
 if(!isset($_SESSION['openid']) and isset($_GET['login'])) {
   $_SESSION['redirect']='m';
