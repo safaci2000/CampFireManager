@@ -31,6 +31,10 @@ These packages are based on requirements in Ubuntu:
     php5-cli
     php5-gmp (for the OpenID packages)
 
+## Optional Extras  ##
+
+    PageKite (see below for details)
+
 ## Installation ##
 
 Install the above packages, then create the MySQL Users and Tables for both 
@@ -110,3 +114,132 @@ If your instance of CampFireManager is at http://localhost/ then your
 administration interface is at http://localhost/admin.php - it will force you 
 to log in using OpenID first. Once you've authenticated, you'll have to click
 on the "Modify config values" link on the main page.
+
+## Optional Extra -- PageKite ##
+
+### Intro ###
+
+If you are running CampFireManager at an event where you have multiple attendees
+with smartphones or 3G access, it may be useful to provide external access to
+the CampFireManager instance without hosting a second instance of the service.
+
+In this context, PageKite might be useful, if you do not have access to the NAT
+or port forwarding configuration on the site's router/firewall. PageKite is
+designed to provide a link between a locally hosted webserver and a public facing
+server, without requiring extensive configuration or access to routers.
+
+### Installing it - At the CampFireManager end ###
+
+PageKite has a debian/ubuntu package which can be installed, but it's not
+currently in any of the repositories, so to install it, you'll need to add a new 
+line to your /etc/apt/sources.list file, or create a new file called
+/etc/apt/sources.list.d/PageKite.list to add the package.
+
+This line is:
+deb http://apt.he.pagekite.me/ pagekite main
+
+Get the pagekite repo recognised at the machine:
+sudo apt-get update
+
+Next, add the GPG key for that repo:
+sudo apt-key adv --recv-keys --keyserver keys.gnupg.net 6F95480C
+
+Install pagekite
+sudo apt-get update && sudo apt-get install pagekite
+
+### Choosing your end-point ###
+
+PageKite can be run with a hosted or self-hosted "front-end" (AKA the public
+facing bit). Both are equally easy to configure on the "back-end" (AKA the 
+local end) and configuring a self-hosted "front-end" is *relatively* simple to
+achieve.
+
+Personally, for a smaller event (<100 attendees), I would use the PageKite.me 
+service from pagekite.net which provides up to 5Gb of data use, while with a
+larger event, host your own endpoint, or put some funds towards PageKite.net
+and enable a great opensource project to grow!
+
+If you want to use PageKite.me, go to PageKite.net and register an account.
+The Settings file from there can be placed into /etc/pagekite/pagekite.rc, 
+then start the pagekite service by running:
+sudo /etc/init.d/pagekit start
+
+If you want to self-host, see the next section for setting up your pagekite
+front-end, and the settings you'll need to pair the two ends up.
+
+### Setting up your own PageKite front-end ###
+Install the pagekite package on your front-end machine, then add the following
+lines to your /etc/pagekite/pagekite.rc file:
+
+  # Run your own PageKite front-end
+  isfrontend
+  host=HOST_INTERFACE_IP_ADDRESS
+  ports=80,443
+  protos=http,https
+  domain=http,https:EXTERNAL_WEB.SVC.ADDR.ESS:A_C0MPl£x_Pa55w0rd
+  # Or, slightly more securely, than the above line, specify
+  # per-host entries on each line. Use * as a wildcard.
+  #
+  # Format of these are: domain=service1,service2/port:HOSTNAME:Password
+  #
+  #domain=http,https:www.my-web-host:A-Password
+  #domain=http,https:*.public-web-svc:Another-Password
+
+  # If you've got an existing web service running on this box
+  # You'll either need to stop it for the duration of the event
+  # or, change the IP address it listens on to something in the
+  # 127.0.0.0/8 subnet - e.g. 127.1.1.1 or (more usually) 127.0.0.1
+  # Because you're hiding your local services behind PageKite, you
+  # don't need to include a password. You can also include any other
+  # backend addresses in this too without supplying a password, it's
+  # only externally connecting services that need the above password.
+  # Delete these, or comment them out, if this web host never normally
+  # provides a webservice.
+  #
+  # Format of these are: backend=service:HOSTNAME:LocalAddress:Port:Password
+
+  backend=https:YOUR.EXTERNALLY.RESOLVABLE.NAME:127.0.0.1:443:
+  backend=http:YOUR.EXTERNALLY.RESOLVABLE.NAME:127.0.0.1:80:
+  backend=https:YOUR.IP.ADDR.ESS:127.0.0.1:443:
+  backend=http:YOUR.IP.ADDR.ESS:127.0.0.1:80:
+  backend=https:YOUR-INTERNAL-HOSTNAME:127.0.0.1:443:
+  backend=http:YOUR-INTERNAL-HOSTNAME:127.0.0.1:80:
+
+  # Comment out this section, as you don't need it if you're running
+  # your own instance!
+  #
+  # Use the pageKite.net service by default
+  #frontends=1:frontends.b5p.us:443
+  #dyndns=pagekite.net
+
+Once you've got all this lot sorted out, next, on your backend machine, edit
+/etc/pagekite/pagekite.rc and change the following:
+
+  # You don't want to be using the pagekite.net service
+  # so therefore, comment out the following block!
+  #
+  # Use the pageKite.net service by default
+  #frontends=1:frontends.b5p.us:443
+  #dyndns=pagekite.net
+
+  # Because I've not yet figured out how to do the TLS encryption - use
+  # cleartext in the tunnel right now. Any HTTPS connections would be
+  # encrypted up to the webserver *anyway*, and at least this way it works!
+  # If someone wants to submit a patch to the documentation for this project
+  # - Either CampFireManager or PageKite, that'd be rather useful :)
+  #
+  frontend=FRONTEND_HOSTNAME:80
+
+  # As we're not using TLS yet, comment out this line, as it won't work
+  # for this connection.
+  # I'm guessing this is where my issue is with the previous comment, but
+  # as I'm not sure, please, if you've got any suggestions, let me know!
+  #
+  # Enable TLS encryption for your tunnel, comment out for a plaintext tunnel
+  #fe_certname=frontends.b5p.us
+
+Next, edit /etc/pagekite/local.rc. At the very end of the file, ensure all the
+existing backends are commented out, and then add your own
+
+  backend=http:EXTERNAL_WEB.SVC.ADDR.ESS:localhost:80:A_C0MPl£x_Pa55w0rd
+  backend=https:EXTERNAL_WEB.SVC.ADDR.ESS:localhost:443:A_C0MPl£x_Pa55w0rd
