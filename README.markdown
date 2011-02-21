@@ -128,24 +128,9 @@ or port forwarding configuration on the site's router/firewall. PageKite is
 designed to provide a link between a locally hosted webserver and a public facing
 server, without requiring extensive configuration or access to routers.
 
-### Installing it - At the CampFireManager end ###
+### Installing PageKite ###
 
-PageKite has a debian/ubuntu package which can be installed, but it's not
-currently in any of the repositories, so to install it, you'll need to add a new 
-line to your /etc/apt/sources.list file, or create a new file called
-/etc/apt/sources.list.d/PageKite.list to add the package.
-
-This line is:
-deb http://apt.he.pagekite.me/ pagekite main
-
-Get the pagekite repo recognised at the machine:
-sudo apt-get update
-
-Next, add the GPG key for that repo:
-sudo apt-key adv --recv-keys --keyserver keys.gnupg.net 6F95480C
-
-Install pagekite
-sudo apt-get update && sudo apt-get install pagekite
+Follow the installation guide at http://pagekite.net/wiki/Howto/GNULinux/DebianPackage/
 
 ### Choosing your end-point ###
 
@@ -159,10 +144,13 @@ service from pagekite.net which provides up to 5Gb of data use, while with a
 larger event, host your own endpoint, or put some funds towards PageKite.net
 and enable a great opensource project to grow!
 
-If you want to use PageKite.me, go to PageKite.net and register an account.
-The Settings file from there can be placed into /etc/pagekite/pagekite.rc, 
+If you want to use PageKite.me, go to http://PageKite.net and register an 
+account. Download the settings file for Linux and then from a command line, run
+the following command:
+  grep "backend=" pagekite.rc | sudo tee -a /etc/pagekite/local.rc
+
 then start the pagekite service by running:
-sudo /etc/init.d/pagekit start
+  sudo /etc/init.d/pagekit start
 
 If you want to self-host, see the next section for setting up your pagekite
 front-end, and the settings you'll need to pair the two ends up.
