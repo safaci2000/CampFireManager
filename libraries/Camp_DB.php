@@ -700,7 +700,7 @@ class Camp_DB extends GenericBaseClass {
 
   function showStatusScreen($number=50) {
     $where='';
-    if($this->intPersonID!='') {$where="intPersonID='{$this->intPersonID}' AND ";} 
+    if($this->intPersonID!='') {$where="intPersonID='{$this->intPersonID}' AND ";}
     return $this->qryMap('intUpdateID', 'strMessage', "{$this->prefix}sms_screen WHERE $where datInsert>'" . date("Y-m-d H:i:s", strtotime("-15 minutes")) . "' ORDER BY datInsert DESC", '',  "LIMIT 0, $number");
   }
 
@@ -1124,7 +1124,7 @@ class Camp_DB extends GenericBaseClass {
 
   protected function _fixRooms($now_time) {
     $this->doDebug("_fixRooms()");
-    return $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}talks SET boolFixed=1, isChanged=1 WHERE intTimeID<='$now_time'");
+    return $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}talks SET boolFixed=1 WHERE intTimeID<='$now_time'");
   }
 
   protected function _setAdmin() {
@@ -1198,20 +1198,25 @@ class Camp_DB extends GenericBaseClass {
 
   function getAdmins() {
     $this->doDebug("getAdmins()");
-    $return=$this->qryMap('"admins"', 'count(boolIsAdmin)', "{$this->prefix}people WHERE boolIsAdmin!=0");
+    $return=$this->qryMap('intPersonID', 'count(boolIsAdmin)', "{$this->prefix}people WHERE boolIsAdmin!=0 LIMIT 1");
     if(count($return) == 0) {
       return(0);
     } else {
-      return($return['admins']);
+      return(1);
     }
   }
   function checkAdmin() {return($this->isAdmin);}
 
   function getSupport() {
     $this->doDebug("getSupport()");
-    $return=$this->qryMap('"support"', 'count(boolIsSupport)', "{$this->prefix}people WHERE boolIsSupport!=0");
-    return($return['support']);
+    $return=$this->qryMap('intPersonID', 'count(boolIsSupport)', "{$this->prefix}people WHERE boolIsSupport!=0 LIMIT 1");
+    if(count($return) == 0) {
+      return(0);
+    } else {
+      return(1);
+    }
   }
+
   function checkSupport() {return($this->isSupport);}
 
   function getSmsTemplate($sms_limit=50) {

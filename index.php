@@ -1,4 +1,4 @@
-<?php 
+<?php
 /*******************************************************
  * CampFireManager
  * Public facing web page
@@ -11,7 +11,11 @@
  * http://code.google.com/p/campfiremanager/
  ******************************************************/
 
-if(session_id()==='') {session_start();}
+if (session_id()==='') {
+    $lifetime=604800; // 7 Days
+    session_start();
+    setcookie(session_name(),session_id(),time()+$lifetime);
+}
 if(isset($_SESSION['openid']) and isset($_SESSION['redirect'])) {header("Location: " . $_SESSION['redirect']);}
 require_once("db.php");
 require_once("{$base_dir}common_functions-template.php");
@@ -166,7 +170,7 @@ if(!isset($_SESSION['openid'])) {
       break;
     case "I":
       $details=$Camp_DB->getContactDetails(0, TRUE);
-      echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n" . 
+      echo "\r\n<form method=\"post\" action=\"$baseurl\" class=\"DrawAttention\">\r\n" .
                 "<input type=\"hidden\" name=\"state\" value=\"Id\">";
       echo "<table width=\"100%\"><tr><td colspan=\"3\" class=\"Label DrawAttention Right\">Name:</td><td colspan=\"3\" class=\"Data Left\"><input type=\"text\" name=\"name\" value=\"" . CampUtils::arrayGet($details, 'strName', '') . "\" /></td></tr>";
       $intCol=0;

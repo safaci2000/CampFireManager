@@ -11,7 +11,11 @@
  * http://code.google.com/p/campfiremanager/
  ******************************************************/
 
-if(session_id()==='') {session_start();}
+if (session_id()==='') {
+    $lifetime=604800; // 7 Days
+    session_start();
+    setcookie(session_name(),session_id(),time()+$lifetime);
+}
 if(isset($_SESSION['redirect'])) {unset($_SESSION['redirect']);}
 require_once("../db.php");
 require_once("{$base_dir}CampUtils.php");
@@ -57,7 +61,8 @@ if($Camp_DB->getSupport()==0 AND $Camp_DB->getAdmins()==0) {
     $status=$Camp_DB->getPerson(array('strContactInfo'=>'%' . $_POST['contact'] . '%'));
   } elseif(isset($_POST['name']) AND $_POST['name']!='') {
     $status=$Camp_DB->getPerson(array('strName'=>'%' . $_POST['name'] . '%'));
-  } elseif(isset($_POST['edit']) AND $_POST['ntitle']!='' AND $_POST['talkid']!='') {
+  }
+  if(isset($_POST['edit']) AND $_POST['ntitle']!='' AND $_POST['talkid']!='') {
     $Camp_DB->editTalk(array($_POST['talkid'], $Camp_DB->arrTalks[$_POST['talkid']]['intTimeID'], $Camp_DB->escape(htmlentities($_POST['ntitle']) . ' ')));
   } elseif(isset($_POST['cancel']) AND $_POST['talkid']!='') {
     $Camp_DB->cancelTalk(array($_POST['talkid'], $Camp_DB->arrTalks[$_POST['talkid']]['intTimeID'], $Camp_DB->escape(htmlentities($_POST['reason']))));
@@ -158,7 +163,7 @@ if($Camp_DB->getSupport()==0 AND $Camp_DB->getAdmins()==0) {
     } elseif(isset($_GET['decline'])) {
       $Camp_DB->declineTalk($_GET['decline']);
     }
-    
+
     echo "<h2>Future Talks</h2>";
     $person=$Camp_DB->allMyDetails();
     $attend_talks=$Camp_DB->getTalksIAmAttending();
@@ -168,7 +173,7 @@ if($Camp_DB->getSupport()==0 AND $Camp_DB->getAdmins()==0) {
           if(!isset($showtalk[$intTalkID]) and $intTalkID>0) {
             echo "<p>Talk $intTalkID: " . $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'];
             if($Camp_DB->arrTalks[$intTalkID]['intPersonID']==$person['intPersonID']) {
-              echo " <a href=\"$baseurl?edit=$intTalkID\">Edit</a> | 
+              echo " <a href=\"$baseurl?edit=$intTalkID\">Edit</a> |
                      <a href=\"$baseurl?cancel=$intTalkID\">Cancel</a> |
                      <a href=\"$baseurl?fix=$intTalkID\">";
               if($Camp_DB->arrTalks[$intTalkID]['boolFixed']==0) {

@@ -7,11 +7,15 @@
  * Version History
  * 0.5 2010-03-19 Migrated from personal SVN store
  * at http://spriggs.org.uk/jon_code/CampFireManager
- * where all prior versions are stored to Google Code at 
+ * where all prior versions are stored to Google Code at
  * http://code.google.com/p/campfiremanager/
  ******************************************************/
 
-if(session_id()==='') {session_start();}
+if (session_id()==='') {
+    $lifetime=604800; // 7 Days
+    session_start();
+    setcookie(session_name(),session_id(),time()+$lifetime);
+}
 if(isset($_SESSION['redirect'])) {unset($_SESSION['redirect']);}
 require_once("db.php");
 

@@ -11,7 +11,11 @@
  * http://code.google.com/p/campfiremanager/
  ******************************************************/
 
-if(session_id()==='') {session_start();}
+if (session_id()==='') {
+    $lifetime=604800; // 7 Days
+    session_start();
+    setcookie(session_name(),session_id(),time()+$lifetime);
+}
 if(isset($_SESSION['redirect'])) {unset($_SESSION['redirect']);}
 if(isset($_SESSION['openid']) and isset($_GET['logout'])) {
   $_SESSION['redirect']='m';
@@ -169,9 +173,9 @@ if(isset($_SESSION['openid'])) {
     echo "<input type=\"submit\" value=\"Go\" />";
   }
   echo "<h2>Options</h2>";
-  echo "<a href=\"$baseurl?propose\">Propose a talk</a><br />"; 
-  echo "<a href=\"$baseurl?list\">List talks which are yet to start</a><br />"; 
-  echo "<a href=\"$baseurl?my\">List my talks which are yet to start</a><br />"; 
+  echo "<a href=\"$baseurl?propose\">Propose a talk</a><br />";
+  echo "<a href=\"$baseurl?list\">List talks which are yet to start</a><br />";
+  echo "<a href=\"$baseurl?my\">List my talks which are yet to start</a><br />";
   echo "<a href=\"$baseurl?contact\">Change my contact details</a><br />";
 }
 if(!isset($_SESSION['openid'])) {
