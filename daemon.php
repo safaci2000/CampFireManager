@@ -95,7 +95,12 @@ while(true) {
   foreach($msgs as $msg) {
     $Camp_DB->getMe($msg);
 
-    $commands=explode(" ", $msg['text']);
+    $dirty_commands=explode(" ", $msg['text']);
+    $commands = array();
+    $dirty_chars = '<>[]{}()';
+    foreach ($dirty_commands as $key => $dirty_command) {
+        $commands[$key] = trim($dirty_command, $dirty_chars);
+    }
     $command_data=array_slice($commands, 1);
 
     $Camp_DB->doDebug("Parsing commands: " . print_r($commands, TRUE), 2);
