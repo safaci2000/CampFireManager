@@ -79,7 +79,7 @@ if($now>0) {
     } elseif(isset($Camp_DB->arrTalks[$intTalkID]['boolIsFixed'])) {
       $now_talks.=$Camp_DB->rooms[$intRoomID]["strRoom"] . ' - ' . $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . '<br />';
     } else {
-      $now_talks.=$Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . '<br />';
+      $now_talks.='Unfixed: ' . $Camp_DB->rooms[$intRoomID]["strRoom"] . ' - ' . $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . '<br />';
     }
   }
 }
@@ -94,7 +94,7 @@ if($next>0) {
     } elseif(isset($Camp_DB->arrTalks[$intTalkID]['boolIsFixed'])) {
       $next_talks.=$Camp_DB->rooms[$intRoomID]["strRoom"] . ' - ' . $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . '<br />';
     } else {
-      $next_talks.=$Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . '<br />';
+      $next_talks.='Unfixed: ' . $Camp_DB->rooms[$intRoomID]["strRoom"] . ' - ' . $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . '<br />';
     }
   }
 }
@@ -121,7 +121,7 @@ if(isset($_SESSION['openid'])) {
         foreach($Camp_DB->arrTalkSlots[$intTimeID] as $intRoomID=>$intTalkID) {
           if(!isset($showtalk[$intTalkID]) and $intTalkID>0) {
             if(!isset($_GET['my']) or $Camp_DB->arrTalks[$intTalkID]['intPersonID']==$person['intPersonID']) {
-              echo $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . " (" . $Camp_DB->arrTimeEndPoints[$Camp_DB->arrTalks[$intTalkID]['intTimeID']]['s'] . " - " . $Camp_DB->arrTimeEndPoints[$Camp_DB->arrTalks[$intTalkID]['intTimeID'] + $Camp_DB->arrTalks[$intTalkID]['intLength'] - 1]['e'] . ")";
+              echo 'Unfixed: ' . $Camp_DB->rooms[$intRoomID]["strRoom"] . ' - ' . $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . " (" . $Camp_DB->arrTimeEndPoints[$Camp_DB->arrTalks[$intTalkID]['intTimeID']]['s'] . " - " . $Camp_DB->arrTimeEndPoints[$Camp_DB->arrTalks[$intTalkID]['intTimeID'] + $Camp_DB->arrTalks[$intTalkID]['intLength'] - 1]['e'] . ")";
               if(isset($present[$intTalkID])) {
                 echo " <a href=\"$baseurl?edit=$intTalkID\">Edit</a> | <a href=\"$baseurl?delete=$intTalkID\">Delete</a>";
               } else {
