@@ -1338,14 +1338,9 @@ class Camp_DB extends GenericBaseClass {
             if($talk['boolFixed']>0) {
               $mainbody.="          <tr class=\"Location\"><td class=\"Location\"><span class=\"Label\">Location:</span> <span class=\"Data\">{$this->rooms[$intRoomID]['strRoom']}</span></td></tr>\r\n";
             }
-            if(isset($my_talks) && $intTimeID>$this->now_time && $talk['intTalkID']!='' && isset($my_talks[$talk['intTalkID']])) {
-              if($talk['intCount']>$arrRoom['intCapacity']) {$countClass="Over";} else {$countClass="";}
-              $mainbody.="          <tr class=\"Count\"><td class=\"Count\"><span class=\"Label\">Attending:</span> <span class=\"Data $countClass\">{$talk['intCount']}</span><td></tr>\r\n";
-            }
-            if(isset($includeCountData) && $includeCountData==TRUE) {
-              if($talk['intCount']>$arrRoom['intCapacity']) {$countClass="Over";} else {$countClass="";}
-              $mainbody.="          <tr class=\"Count\"><td class=\"Count\"><span class=\"Label\">Attending:</span> <span class=\"Data $countClass\">{$talk['intCount']}</span><td></tr>\r\n";
-            } elseif($intTimeID>$this->now_time && $talk['intTalkID']!='' && isset($my_talks) && !isset($my_talks[$talk['intTalkID']]) && isset($attend_talks)) {
+            if($talk['intCount']>$arrRoom['intCapacity']) {$countClass="Over";} else {$countClass="";}
+            $mainbody.="          <tr class=\"Count\"><td class=\"Count\"><span class=\"Label\">Attending:</span> <span class=\"Data $countClass\">{$talk['intCount']}</span><td></tr>\r\n";
+            if($intTimeID>$this->now_time && $talk['intTalkID']!='' && isset($my_talks) && !isset($my_talks[$talk['intTalkID']]) && isset($attend_talks)) {
               $mainbody.="<tr class=\"Attend\"><td class=\"Attend\" colspan=\"2\">\r\n";
               if(!isset($attend_talks[$talk['intTalkID']])) {
                 $mainbody.="<a href=\"$baseurl?state=A&talkid={$talk['intTalkID']}\" class=\"action\">Attend this talk.</a>\r\n";
