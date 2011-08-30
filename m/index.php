@@ -76,7 +76,7 @@ if($now>0) {
     if($intTalkID<0) {
       $break_name=$Camp_DB->timetypes[-$intTalkID];
     } elseif($intTalkID==0) {
-    } elseif(isset($Camp_DB->arrTalks[$intTalkID]['boolIsFixed'])) {
+    } elseif(isset($Camp_DB->arrTalks[$intTalkID]['boolFixed']) and $Camp_DB->arrTalks[$intTalkID]['boolFixed'] == 1) {
       $now_talks.=$Camp_DB->rooms[$intRoomID]["strRoom"] . ' - ' . $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . '<br />';
     } else {
       $now_talks.='Unfixed: ' . $Camp_DB->rooms[$intRoomID]["strRoom"] . ' - ' . $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . '<br />';
@@ -91,10 +91,10 @@ if($next>0) {
     if($intTalkID<0) {
       $break_name=$Camp_DB->timetypes[-$intTalkID];
     } elseif($intTalkID==0) {
-    } elseif(isset($Camp_DB->arrTalks[$intTalkID]['boolIsFixed'])) {
+    } elseif(isset($Camp_DB->arrTalks[$intTalkID]['boolFixed']) and $Camp_DB->arrTalks[$intTalkID]['boolFixed'] == 1) {
       $next_talks.=$Camp_DB->rooms[$intRoomID]["strRoom"] . ' - ' . $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . '<br />';
     } else {
-      $next_talks.='Unfixed: ' . $Camp_DB->rooms[$intRoomID]["strRoom"] . ' - ' . $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . '<br />';
+      $next_talks.="Unfixed: " . $Camp_DB->rooms[$intRoomID]["strRoom"] . ' - ' . $Camp_DB->arrTalks[$intTalkID]['strTalkTitle'] . '<br />';
     }
   }
 }
