@@ -9,7 +9,7 @@ if (!is_writable('./db.php')) {
 	die("\ndb.php is not writable. Please make sure you have permission to edit this file - you may need to run this script with root privileges\n");
 }
 if (!file_exists('/usr/share/doc/gammu/examples/sql/mysql.sql.gz')) {
-	die("\nGammu install files not found. Please ensure Gammu is installed, at that the database structure can be found at /usr/share/doc/gammu/examples/sql/mysql.sql.gz.\n");
+	die("\nGammu install files not found. Please ensure Gammu is installed, and that the database structure can be found at /usr/share/doc/gammu/examples/sql/mysql.sql.gz.\n");
 }
 $yn = readline("\nWould you like CampFireManager to set up your databases for you? (Y/N)");
 switch ($yn) {
@@ -60,7 +60,7 @@ switch ($yn) {
 try {
 	$db = mysql_connect('localhost', $username, $password);
 	if(!mysql_select_db($database, $db)) {
-		throw new Exception("Could't connect to Campfire's database. You may have entered the wrong credentials");
+		throw new Exception("Couldn't connect to Campfire's database. You may have entered the wrong credentials");
 	}
 	$sql1 = explode(';', file_get_contents('./sql'));
 	$sql2 = explode(';', `gunzip -c /usr/share/doc/gammu/examples/sql/mysql.sql.gz`);
