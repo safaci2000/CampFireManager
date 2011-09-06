@@ -282,6 +282,8 @@ class Camp_DB extends GenericBaseClass {
       $intTalkID=$this->getInsertID();
       $this->_addChange(array('intTalkID'=>$intTalkID));
       return($intTalkID);
+    } else {
+      return false;
     }
   }
 
@@ -712,8 +714,12 @@ class Camp_DB extends GenericBaseClass {
         $this->_attendTalk($intTalkID);
         $this->updateStatusScreen("{$this->strName} is attending the talk number $intTalkID.");
         $this->sortRooms();
+        return true;
       }
-    } else {$this->updateStatusScreen("{$this->strName} tried to attend their own talk $intTalkID.");}
+    } else {
+      $this->updateStatusScreen("{$this->strName} tried to attend their own talk $intTalkID.");
+      return false;
+    }
   }
 
   function declineTalk($intTalkID) {
@@ -724,8 +730,10 @@ class Camp_DB extends GenericBaseClass {
         $this->_declineTalk($intTalkID);
         $this->updateStatusScreen("{$this->strName} is no longer attending the talk number $intTalkID.");
         $this->sortRooms();
+        return true;
       }
     }
+    return false;
   }
 
   function insertStaticTalk($time, $room, $talk, $length=1, $date='') {
@@ -795,7 +803,7 @@ class Camp_DB extends GenericBaseClass {
     }
     if($stop==TRUE) {
       $this->updateStatusScreen("{$this->strName} didn't provide enough information to Propose a talk. (Received " . print_r($commands, TRUE) . ")");
-      return FALSE;
+      return false;
     } else {
       if($boolFixed==1 and $this->isAdmin==0) {$boolFixed=0;}
       $talk=$this->escape($talk);
@@ -813,9 +821,13 @@ class Camp_DB extends GenericBaseClass {
               }
               if($roomfree==1) {
                 $intTalkID=$this->_createTalk($time, $room, $this->intPersonID, $talk, $boolFixed, $length, $date);
-                $this->updateStatusScreen("{$this->strName} proposed a talk about '$talk' into the slot {$this->times[$time]['strTime']}. It is talk number $intTalkID.");
-                $this->sortRooms();
-                return $intTalkID;
+                if ($intTalkID != false) {
+                    $this->updateStatusScreen("{$this->strName} proposed a talk about '$talk' into the slot {$this->times[$time]['strTime']}. It is talk number $intTalkID.");
+                    $this->sortRooms();
+                    return $intTalkID;
+                } else {
+                    return false;
+                }
               }
             }
           }
@@ -828,7 +840,7 @@ class Camp_DB extends GenericBaseClass {
       }
       if($stop!=FALSE) {
         $this->updateStatusScreen("{$this->strName} was unable to propose a talk because there were no more available slots. (Received " . print_r($commands, TRUE) . ")");
-        return FALSE;
+        return false;
       }
     }
   }
@@ -1104,14 +1116,19 @@ class Camp_DB extends GenericBaseClass {
         $contact_data.=$data;
       }
     }
-    $this->_updateIdentityInfo($contact_name, $contact_data);
-    $this->updateStatusScreen("$contact_name updated their details on the system.");
+    if ($this->_updateIdentityInfo($contact_name, $contact_data)) {
+      $this->updateStatusScreen("$contact_name updated their details on the system.");
+      return true;
+    }
   }
 
   protected function _updateIdentityInfo($contact_name, $contact_data) {
     $this->doDebug("_updateIdentityInfo('$contact_name, $contact_data')");
     if($this->boolUpdateOrInsertSql("UPDATE {$this->prefix}people SET strName='" . $this->escape($contact_name) . "', strContactInfo='" . $this->escape($contact_data) . "' WHERE intPersonID='{$this->intPersonID}'")) {
       $this->_addChange(array('intPersonID'=>$this->intPersonID));
+      return true;
+    } else {
+      return false;
     }
   }
 
@@ -1143,11 +1160,17 @@ class Camp_DB extends GenericBaseClass {
     $strAuthString=$this->escape($strAuthString);
     if($this->config['adminkey']==$strAuthString) {
       $this->_setAdmin();
+      return true;
     } elseif($this->config['supportkey']==$strAuthString) {
       $this->_setSupport();
+      return true;
     } else {
       $contacts=$this->getPerson(array('strAuthString'=>$strAuthString));
-      if(count($contacts)==1) {$this->_mergeContactDetails($contacts);}
+      if(count($contacts)==1) {
+        if ($this->_mergeContactDetails($contacts)) {
+          return true;
+        }
+      }
     }
   }
 
@@ -1163,6 +1186,7 @@ class Camp_DB extends GenericBaseClass {
     $this->doDebug("_mergeContactDetails(" . print_r($arrContacts, TRUE) . ")");
 
     $me = $this->allMyDetails();
+    $state = false;
     foreach($arrContacts as $intContactID => $arrContact) {
       if($intContactID < $this->intPersonID) {
         $first = $arrContact;
@@ -1189,11 +1213,13 @@ class Camp_DB extends GenericBaseClass {
       if($second['boolIsAdmin']!='0' AND $first['boolIsAdmin']==0) {if($set!='') {$set.=', ';} $set.="boolIsAdmin='{$second['boolIsAdmin']}'";}
       if($set != '') {
         $this->boolUpdateOrInsertSql("UPDATE {$this->prefix}people SET $set WHERE intPersonID='{$first['intPersonID']}'");
+        $state = true;
       }
       $this->boolUpdateOrInsertSql("DELETE FROM {$this->prefix}people WHERE intPersonID='{$second['intPersonID']}'");
       $this->getMe(array("intPersonID"=>$first['intPersonID']));
       $this->refresh();
     }
+    return $state;
   }
 
   function getAdmins() {

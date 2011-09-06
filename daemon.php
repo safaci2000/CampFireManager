@@ -111,7 +111,11 @@ while(true) {
       case "IDENTIFY":
       case "ID":
       case "I": // Identify
-        $Camp_DB->updateIdentityInfo($command_data);
+        if ($Camp_DB->updateIdentityInfo($command_data)) {
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Identity information received and processed. Thanks.");}
+        } else {
+            if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Error processing your Identity information. Please contact a support person to progress this issue.");}
+        }
         break;
       case "OPENID":
       case "OPEN":
@@ -120,7 +124,11 @@ while(true) {
       case "AUTHORISE":
       case "AUTH":
       case "O": // Pair a microblogging account or phone number with an OpenID account
-        $Camp_DB->mergeContactDetails($commands[1]);
+        if ($Camp_DB->mergeContactDetails($commands[1])) {
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Association information received and processed. Thanks.");}
+        } else {
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Error processing your Association request. Please contact a support person to progress this issue.");}
+        }
         break;
       // F [Time slot] [Length] [Title]
       case "FIX":
@@ -128,17 +136,30 @@ while(true) {
       // P [Time slot] [Length] [Title]
       case "PROPOSE":
       case "P": // Propose a talk
-        $Camp_DB->insertTalk($command_data);
+        $intTalkID = $Camp_DB->insertTalk($command_data);
+        if ($intTalkID != false) {
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Talk Proposal request received and processed. It is talk $intTalkID. Thanks.");}
+        } else {
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Error processing your Talk Proposal. Please see the main screen or contact a support person to progress this issue.");}
+        }
         break;
       // C [TalkID] [Time Slot] <Reason>
       case "CANCEL":
       case "C": // Cancel a talk
-        $Camp_DB->cancelTalk($command_data);
+        if ($Camp_DB->cancelTalk($command_data)) {
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Talk Cancellation request received and processed. Thanks.");}
+        } else {
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Error processing your Talk Cancellation. Please see the main screen or contact a support person to progress this issue.");}
+        }
         break;
       // E [TalkID] [Time Slot] [New Title]
       case "EDIT":
       case "E": // Edit a talk's title
-        $Camp_DB->editTalk($commands);
+        if ($Camp_DB->editTalk($commands)) {
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Talk Edit request received and processed. Thanks.");}
+        } else {
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Error processing your Talk Edit. Please see the main screen or contact a support person to progress this issue.");}
+        }
         break;
       // A [TalkID]  // R [TalkID]
       case "ATTEND":
@@ -148,32 +169,71 @@ while(true) {
       case "DECLINE":
       case "STOP":
       case "R": // Remove me from a talk
+        $state = false;
+        $issues = false;
+        $attend = false;
+        $decline = false;
         for($i=0; $i<=count($commands)-1; $i++) {
           switch(strtoupper($commands[$i])) {
             case "ATTEND":
             case "GO":
             case "A":
-              $Camp_DB->attendTalk($commands[$i+1]);
+              if (0 + $commands[$i+1] > 0) {
+                  if ($Camp_DB->attendTalk($commands[$i+1])) {
+                    $state = true;
+                    $attend = true;
+                  } else {
+                    $issues = true;
+                  }
+              }
               break;
             case "REMOVE":
             case "DECLINE":
             case "STOP":
             case "R":
-              $Camp_DB->declineTalk($commands[$i+1]);
+              if (0 + $commands[$i+1] > 0) {
+                  if ($Camp_DB->declineTalk($commands[$i+1])) {
+                    $state = true;
+                    $decline = true;
+                  }
+              }
               break;
           }
+        }
+        if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {
+            if ($state == true and $issues == false) {
+              if ($attend == true and $decline == true) {
+                $Camp_DB->sendMessage("Attend and Remove requests received and processed. Thanks.");
+              } elseif ($attend == true) {
+                $Camp_DB->sendMessage("Attend requests received and processed. Thanks.");
+              } else {
+                $Camp_DB->sendMessage("Remove requests received and processed. Thanks.");
+              }
+            } elseif ($state == true and $issues == true) {
+              if ($attend == true and $decline == true) {
+                $Camp_DB->sendMessage("Some (but not all) Attend and Remove requests received and processed successfully. Please check main board or Support Person for details.");
+              } elseif ($attend == true) {
+                $Camp_DB->sendMessage("Some (but not all) Attend requests received and processed successfully. Please check main board or Support Person for details.");
+              } else {
+                $Camp_DB->sendMessage("Remove requests received and processed. Attend requests were all unable to be processed. Please check main board or Support Person for details.");
+              }
+            } elseif ($state == false and $issues == true) {
+              $Camp_DB->sendMessage("Attend requests were all unable to be processed. Please check main board or Support Person for details.");
+            } else {
+              $Camp_DB->sendMessage("No actionable Attend or Remove requests were received.");
+            }
         }
         break;
       case "T":
       case "TIME":
       case "TIMETABLE":
-        $Camp_DB->sendTimeTable(FALSE);
+        if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendTimeTable(FALSE);}
         break;
       case "M":
       case "MYT":
       case "MYTIME":
       case "MYTIMETABLE":
-        $Camp_DB->sendTimeTable(TRUE);
+        if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendTimeTable(TRUE);}
         break;
       default:
     }

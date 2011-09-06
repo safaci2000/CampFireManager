@@ -38,6 +38,7 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
 } elseif($Camp_DB->checkAdmin()==1) { // Otherwise you'll only get it if you're in the admin list
   $config_fields=array('admin_regen'=>'',
                        'support_regen'=>'',
+                       'respond_to_all_sms'=>'If used, should the SMS engine respond to all understandable commands?',
                        'website'=>"The public URL of this site. Leave blank if you don't want to advertise public access.",
                        'event_title'=>'What is the title of your event?',
                        'FixRoomOffset'=>'Relative to the start time of a session, at what point is the room allocated to a talk fixed?',
@@ -169,6 +170,19 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
         break;
       case 'sessions_fixed_to_one_slot':
         if(1==CampUtils::arrayGet($Camp_DB->config, $value, 0)) {
+          $yes="checked";
+          $no="";
+        } else {
+          $yes="";
+          $no="checked";
+        }
+        echo "<tr><td class=\"Label\">$data</td><td class=\"Data\">";
+        echo "<input type=\"radio\" name=\"$value\" value=\"1\" $yes> Yes ";
+        echo "<input type=\"radio\" name=\"$value\" value=\"0\" $no> No";
+        echo "</td></tr>";
+        break;
+      case 'respond_to_all_sms':
+        if(1==CampUtils::arrayGet($Camp_DB->config, $value, 1)) {
           $yes="checked";
           $no="";
         } else {
