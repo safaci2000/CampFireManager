@@ -112,9 +112,9 @@ while(true) {
       case "ID":
       case "I": // Identify
         if ($Camp_DB->updateIdentityInfo($command_data)) {
-          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Identity information received and processed. Thanks.");}
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 0)) {$Camp_DB->sendMessage("Identity information received and processed. Thanks.");}
         } else {
-            if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Error processing your Identity information. Please contact a support person to progress this issue.");}
+            if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 0)) {$Camp_DB->sendMessage("Error processing your Identity information. Please contact a support person to progress this issue.");}
         }
         break;
       case "OPENID":
@@ -125,9 +125,9 @@ while(true) {
       case "AUTH":
       case "O": // Pair a microblogging account or phone number with an OpenID account
         if ($Camp_DB->mergeContactDetails($commands[1])) {
-          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Association information received and processed. Thanks.");}
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 0)) {$Camp_DB->sendMessage("Association information received and processed. Thanks.");}
         } else {
-          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Error processing your Association request. Please contact a support person to progress this issue.");}
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 0)) {$Camp_DB->sendMessage("Error processing your Association request. Please contact a support person to progress this issue.");}
         }
         break;
       // F [Time slot] [Length] [Title]
@@ -138,27 +138,27 @@ while(true) {
       case "P": // Propose a talk
         $intTalkID = $Camp_DB->insertTalk($command_data);
         if ($intTalkID != false) {
-          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Talk Proposal request received and processed. It is talk $intTalkID. Thanks.");}
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 0)) {$Camp_DB->sendMessage("Talk Proposal request received and processed. It is talk $intTalkID. Thanks.");}
         } else {
-          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Error processing your Talk Proposal. Please see the main screen or contact a support person to progress this issue.");}
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 0)) {$Camp_DB->sendMessage("Error processing your Talk Proposal. Please see the main screen or contact a support person to progress this issue.");}
         }
         break;
       // C [TalkID] [Time Slot] <Reason>
       case "CANCEL":
       case "C": // Cancel a talk
         if ($Camp_DB->cancelTalk($command_data)) {
-          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Talk Cancellation request received and processed. Thanks.");}
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 0)) {$Camp_DB->sendMessage("Talk Cancellation request received and processed. Thanks.");}
         } else {
-          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Error processing your Talk Cancellation. Please see the main screen or contact a support person to progress this issue.");}
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 0)) {$Camp_DB->sendMessage("Error processing your Talk Cancellation. Please see the main screen or contact a support person to progress this issue.");}
         }
         break;
       // E [TalkID] [Time Slot] [New Title]
       case "EDIT":
       case "E": // Edit a talk's title
         if ($Camp_DB->editTalk($commands)) {
-          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Talk Edit request received and processed. Thanks.");}
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 0)) {$Camp_DB->sendMessage("Talk Edit request received and processed. Thanks.");}
         } else {
-          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendMessage("Error processing your Talk Edit. Please see the main screen or contact a support person to progress this issue.");}
+          if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 0)) {$Camp_DB->sendMessage("Error processing your Talk Edit. Please see the main screen or contact a support person to progress this issue.");}
         }
         break;
       // A [TalkID]  // R [TalkID]
@@ -200,7 +200,7 @@ while(true) {
               break;
           }
         }
-        if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {
+        if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 0)) {
             if ($state == true and $issues == false) {
               if ($attend == true and $decline == true) {
                 $Camp_DB->sendMessage("Attend and Remove requests received and processed. Thanks.");
@@ -227,13 +227,13 @@ while(true) {
       case "T":
       case "TIME":
       case "TIMETABLE":
-        if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendTimeTable(FALSE);}
+        if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 0)) {$Camp_DB->sendTimeTable(FALSE);}
         break;
       case "M":
       case "MYT":
       case "MYTIME":
       case "MYTIMETABLE":
-        if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 1)) {$Camp_DB->sendTimeTable(TRUE);}
+        if(1==CampUtils::arrayGet($Camp_DB->config, 'respond_to_all_sms', 0)) {$Camp_DB->sendTimeTable(TRUE);}
         break;
       default:
     }

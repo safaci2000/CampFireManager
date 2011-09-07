@@ -182,7 +182,7 @@ if($Camp_DB->getAdmins()==0) { // If there's no-one here yet, you get it by defa
         echo "</td></tr>";
         break;
       case 'respond_to_all_sms':
-        if(1==CampUtils::arrayGet($Camp_DB->config, $value, 1)) {
+        if(1==CampUtils::arrayGet($Camp_DB->config, $value, 0)) {
           $yes="checked";
           $no="";
         } else {
