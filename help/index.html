@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Using CampFireManager</title>
+</head>
+<body>
+	<a name="welcome"><h1>Welcome to your CampFireManager Managed Event</h1></a>
+	<p>This guide is to help you understand how CampFireManager works. It will cover the basic functionality you'll see as an attendee. First thing's first...</p>
+	<a name="concept"><h2>The Concept</h2></a>
+	<p>CampFireManager was created to solve two problems the initial author spotted at BarCamps:</p>
+	<ul>
+		<li>Popular talks are frequently in small or even the smallest rooms, and there's no way to tell that a talk will be popular until it's starting.</li>
+		<li>At large events, there's no easy way to find what talks are going on, and where they are.</li>
+	</ul>
+	<p>The basic actions you will take with CampFireManager are to Propose a talk, and to elect to Attend a talk. You can also edit and delete talks you have proposed, or remove yourself from attending a talk that you have previously said you would attend. A talk is proposed in a slot, and is sorted into the most appropriately sized room, based on the number of people attending the talk. Without showing your attendance for a talk, the talk you want to attend may be in too small a room for everyone that wants to be at the talk. Also, it helps the organisers to know when a talk is too busy for a particular room.</p>
+	<p>Bear in mind that talks are not fixed until (usually) 15 minutes before the talk slot is due to start. This is important. Don't assume that a room assigned to a talk is going to stay that way! Keep your eye on the board.</p>
+	<p>Sadly, introducing Technology introduces it's own set of problems, commonly found at tech events, but with the proliferation of smart phones, laptops and tablets, may occur at any event. These are:</p>
+	<ul>
+		<li>The external network connection tends to be really flakey.</li>
+		<li>Even if the external network feed isn't flakey, the internal network may not be designed to cope with a large number of devices being switched on and off pretty rapidly.</li>
+	</ul>
+	<p>To work around this, CampFireManager tries to make as many different methods of access available to you. To start with, the CampFireManager server is usually hosted within the event's local network. By locating the server here, if they do some how lose their external network connection, those of you who brought your own machines can still access the service. Some events also provide computers that you can use to access CampFireManager, which may be wired into the same part of the network as the CampFireManager server. Provided the external network connection stays up, it may be possible to access CampFireManager from a mobile browser. If however, it does not, the organisers have arranged it, there may be an SMS gateway which you can use to interact with CampFireManager. Details for using all of these resources follow.</p>
+	<a name="mainscreen"><h2>The Main Screen</h2></a>
+	<p>The main screen is the hub of your CampFireManager event. If you've been to a barcamp or unconference that isn't using CampFireManager or something like it, the chances are, you'll compare the main screen to the talk board you've seen there. It is a simple timetable, showing where and when talks are on. It tells you what methods you can use to access the system, and tells you what actions people are taking with the system.</p>
+	<p>It is broken down into several sections, working from the top</p>
+	<ol>
+		<li>The name of the event</li>
+		<li>Some details about how to interact with the system</li>
+		<li>The timetable, showing the talk number (more about that in a bit), the title of the talk, the person giving the talk (and any contact details they may have chosen to provide), and finally, the number of people who have said they want to attend that talk.</li>
+		<li>A few lines of details on the actions of all attendees</li>
+	</ol>
+	<p>This will typically be projected against a wall, or on the main stage (if you have such a thing) and will update every few seconds.</p>
+	<a name="directionscreen"><h2>The Direction Screen</h2></a>
+	<p>This isn't always deployed, but if it is, it will show which route to take to get to each room, what talk is on now in that room, and what's on next in there. It also contains a clock, and the time the next slot is due to start.</p>
+	<a name="browserscreen"><h2>Your interaction using a browser</h2></a>
+	<p>Most people will probably interact with CampFireManager using your browser on a laptop or a tablet. The URL to access the CampFireManager service is listed on the main screen, and may also be listed on posters around the site. It uses OpenID to authenticate to the system. If you have a Google, a Yahoo or a MySpace account, buttons to access CampFireManager using these accounts to log on are on the front page (above the timetable). Click on one of those to select your OpenID provider, or enter your own in the text entry box.</p>
+	<p>Remember, if you're using a shared computer, that once you've finished using CampFireManager, and log out - you MUST log out from your OpenID Provider, otherwise the next person to use that machine will still be logged into your OpenID provider with your credentials!</p>
+	<p>If when you log in, there's a red box at the top of the page, you MUST put your name (or your alias, handle, nickname or psudonym) into the name box. The reason the red box is there is to remind you to identify yourself to the service, and it won't let you take any other action without putting something in that box!</p>
+	<p>Once that's out of the way, you can propose talks by clicking on the "New Talk" button under the slot times. Remember, except for in one specific circumstance (not described here), you don't pick your room - the system does that for you. If you like the look of another talk proposed on the system, click on the "Attend This Talk" button. If you change your mind, it'll say "I'm attending" - click on that to stop showing your interest in attending the talk.</p>
+	<p>If you've identified with the system using your Mobile phone, click on the Add Other Access Method button at the top to enter the auth code sent to you by SMS. If you want to provide any contact methods (if you're giving a talk, for example), click on the "Amend Contact Details" button to add these details.</p>
+	<a name="mobilebrowserscreen"><h2>Your interaction using a mobile browser</h2></a>
+	<p>If you have a mobile device with internet access and a web broswer, you may wish to use the mobile interface. The URL will be on the main screen. It provides all the same functionality, but with less clutter. You still log in using OpenID.</p>
+	<a name="sms"><h2>Your interaction using SMS</h2></a>
+	<p>CampFireManager allows you to interact with it using SMS (provided the administrators have configured it). The first time you interact, you will get send an "Auth Code", which you can use to pair your phone account with your OpenID authenticated account (for more about this, see the section about using the browser to interact with CampFireManager). You use short codes to request all your actions with the SMS interface. These are:</p>
+	<ul>
+		<li>
+			<h3>Identify to the system:</h3>
+			<p><strong>All of these are valid codes</strong></p>
+			<ul>
+				<li>i Your Name mailto:an@email.address twitter:handle</li>
+				<li>id Your Name</li>
+				<li>identify Your Name http:your.blog.address</li>
+			</ul>
+			<p>This sets up your name on the CampFireManager system, and is most useful if you plan to give a talk, however, should your phone run out of battery, these details can also be used by an organiser to find your details on the system and act on your behalf. Here's an example of John Doe, with an e-mail address of john@doe.com and a blog at http://doe.com/~john</p>
+			<ul>
+				<li>i John Doe mailto:john@doe.com http:doe.com/~john</li>
+			</ul>
+		</li>
+		<li>
+			<h3>Propose a talk:</h3>
+			<p><strong>Either of these are valid codes</strong></p>
+			<ul>
+				<li>p # Talk Title</li>
+				<li>propose # Talk Title</li>
+			</ul>
+			<p>Here, the # symbol represents a talk slot (as listed on the timetable), and the words "Talk Title" represents the title of your talk. For example, to propose a talk in slot 12, on the subject of "Making CampFireManager better", I may send:</p>
+			<ul>
+				<li>p 12 Help me make CampFireManager better</li>
+			</ul>
+		</li>
+		<li>
+			<h3>Attend a talk:</h3>
+			<p><strong>Any of these are valid codes</strong></p>
+			<ul>
+				<li>a #</li>
+				<li>attend #</li>
+				<li>go #</li>
+			</ul>
+			<p>In this instance, the # symbol indicates the talk number as provided on the main screen and direction screens. It is also on all browser views. As an example, if a talk I'm interested in, has the Talk Number of 22, I may send:</p>
+			<ul>
+				<li>a 22</li>
+			</ul>
+		</li>
+		<li>
+			<h3>Removing my attendance from a talk:</h3>
+			<p><strong>Any of these are valid codes</strong></p>
+			<ul>
+				<li>r #</li>
+				<li>remove #</li>
+				<li>decline #</li>
+				<li>stop #</li>
+			</ul>
+			<p>Again here, the # symbol indicates the talk number as provided on the main screen and direction screens. It is also on all browser views. As an example, if a talk I'd been interested in attending, but am not any further, which has the Talk Number of 42, I may send:</p>
+			<ul>
+				<li>r 42</li>
+			</ul>
+		</li>
+		<li>
+			<h3>Get a timetable:</h3>
+			<p><strong>Any of these are valid codes</strong></p>
+			<ul>
+				<li>t</li>
+				<li>time</li>
+				<li>timetable</li>
+			</ul>
+			<p>This code requests a full copy of the timetable from this slot until the end of the day's event. Please use it sparingly as it will generate a very long text message, which will be sent as multiple messages to your device.</p>
+		</li>
+		<li>
+			<h3>Get my personal timetable:</h3>
+			<p><strong>Any of these are valid codes</strong></p>
+			<ul>
+				<li>m</li>
+				<li>myt</li>
+				<li>mytime</li>
+				<li>mytimetable</li>
+			</ul>
+			<p>This code requests a copy of the timetable from this slot until the end of the day's event, listing talks that I've shown an interest in attending, and talks I'm giving. This will also generate multiple messages.</p>
+		</li>
+		<li>
+			<h3>Cancel a talk I've proposed:</h3>
+			<p><strong>Either of these are valid codes</strong></p>
+			<ul>
+				<li>c # % reason</li>
+				<li>cancel # % reason</li>
+			</ul>
+			<p>This code cancels a talk you've proposed, with a talk number represented here with the symbol # and a slot number, represented here by the symbol %. The reason for having the slot number as well as the talk number is that it confirms this is *actually* the talk you're trying to cancel. The word "reason" is for the actions board, to show why you're cancelling it. For example, here we cancel the talk number 22, in slot 12 because we have to leave earlier than expected.</p>
+			<ul>
+				<li>c 22 12 I've got to leave early</li>
+			</ul>
+		</li>
+		<li>
+			<h3>Edit a talk I've proposed:</h3>
+			<p><strong>Either of these are valid codes</strong></p>
+			<ul>
+				<li>e # % New Title</li>
+				<li>edit # % New Title</li>
+			</ul>
+			<p>This code re-titles a talk you've proposed, with a talk number represented here with the symbol # and a slot number, represented here by the symbol %. The reason for having the slot number as well as the talk number is that it confirms this is *actually* the talk you're trying to re-title. The words "New Talk" represents the new title you are assigning the talk. For example, here we rename the talk number 22, in slot 12 because you wanted to be more clear about the software you're making better.</p>
+			<ul>
+				<li>e 22 12 Help me make the conference managing software better that we're using today</li>
+			</ul>
+		</li>
+	</ul>
+	<p>If you have any issues with the above, please contact an organiser. If you want to get involved in progressing the project, please visit <a href="http://campfiremanager.googlecode.com">the CampFireManager project page at GoogleCode.com</a>. Good luck, and enjoy the conference!</p>
+</body>
+</html>

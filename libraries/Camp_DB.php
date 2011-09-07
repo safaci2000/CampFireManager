@@ -1041,10 +1041,10 @@ class Camp_DB extends GenericBaseClass {
                 if($real_data!='') {$data="<a href=\"$real_data\">URL</a> ";}
                 break;
               case "http":
-                if($real_data!='') {$data="<a href=\"http:$real_data\">URL</a> ";}
+                if($real_data!='') {$data="<a href=\"http://$real_data\">URL</a> ";}
                 break;
               case "https":
-                if($real_data!='') {$data="<a href=\"https:$real_data\">URL</a> ";}
+                if($real_data!='') {$data="<a href=\"https://$real_data\">URL</a> ";}
                 break;
             }
             if($return!='' AND $data!='') {$data.=' | ';}
@@ -1408,7 +1408,7 @@ class Camp_DB extends GenericBaseClass {
             } else {
               $talk=$this->arrTalks[$this->arrTalkSlots[$intTimeID][$intRoomID]];
               if($talk['intLength']>1) {
-                $talk['TalkTitle'].=" ({$talk['intLength']} sessions long)";
+                $talk['TalkTitle'].=" ({$talk['intLength']} slots long)";
               }
               if($only_mine==FALSE) {
                 if($mainbody!='') {$mainbody.=' | ';}
